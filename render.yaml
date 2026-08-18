@@ -1,0 +1,70 @@
+# ---------------------------------------------------------------------------
+#  Render Blueprint — Outreach Companion
+#
+#  Publishes the app as a static site. There is no backend and no database on
+#  purpose: records never leave the worker's browser, so there is no server
+#  here that could ever hold them.
+#
+#  To deploy: push this repo to GitHub, then in Render choose
+#  New -> Blueprint and point it at the repository.
+# ---------------------------------------------------------------------------
+
+services:
+  - type: web
+    name: outreach-companion
+    runtime: static
+
+    # Nothing to compile — the app is plain HTML, CSS and JavaScript.
+    buildCommand: "echo 'No build step: static HTML, CSS and JS.'"
+    staticPublishPath: .
+
+    pullRequestPreviewsEnabled: false
+
+    headers:
+      # The app loads nothing from the internet, so it can be locked down
+      # tightly. 'unsafe-inline' is needed for style= attributes in the
+      # printable document; there are no inline <script> blocks.
+      - path: /*
+        name: Content-Security-Policy
+        value: >-
+          default-src 'self';
+          script-src 'self';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data: blob:;
+          font-src 'self';
+          connect-src 'self';
+          frame-src 'self';
+          form-action 'none';
+          base-uri 'self';
+          frame-ancestors 'none';
+          object-src 'none'
+
+      # Do not let another site frame this app.
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+      # Never leak a record URL to another site.
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer
+
+      # The app has no need for these devices except the camera and location,
+      # which are used only on this origin when the worker taps the button.
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(self), camera=(self), microphone=(), payment=(), usb=()
+
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+
+      # The app is updated by redeploying; keep code fresh but let the
+      # browser cache it between visits.
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=3600, must-revalidate

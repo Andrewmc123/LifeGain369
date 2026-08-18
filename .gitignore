@@ -1,0 +1,23 @@
+# ---------------------------------------------------------------
+#  Never commit exported records — they contain personal
+#  information about real people. These are the filenames the app
+#  produces from Settings -> Backup and the Documentation tab.
+# ---------------------------------------------------------------
+outreach-backup-*.json
+outreach-people-*.csv
+*-record.html
+*-record.txt
+backups/
+exports/
+
+# OneDrive / Windows / macOS clutter
+Thumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
