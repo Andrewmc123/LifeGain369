@@ -8,6 +8,7 @@ A record keeper for street outreach. It holds, for each person you meet:
 - **My Story** — their own account of how they got here, their strengths and hopes
 - needs, barriers, benefits, a documents checklist, a contact log, and referrals
 - **a plan** — what stage they are at, and what is worth doing next
+- **local resources** — NYC hotlines, shelter intake, departments, and the paperwork each step needs
 - **documentation** you can print, save as PDF, email, or download as a file
 
 Everything is stored **on the device only**. There is no account, no server, and nothing is
@@ -83,6 +84,39 @@ a substitute for your local coordinated entry assessment.
 
 ---
 
+## Local resources (Help → NYC resources)
+
+Forty-one New York City resources, grouped by how urgent they are: **Right now**, **A bed
+tonight**, **Young people under 25**, **Money, food and health**, **Keeping or finding housing**,
+**City departments**, and other lines worth having.
+
+- Every number is a **tap-to-dial link** on a phone.
+- **Search** filters the whole sheet — try "veteran", "food", "youth".
+- **Print this sheet** produces a clean street sheet with the app furniture stripped out and web
+  addresses spelled out in full, so it works on paper. Hand it to someone.
+
+**Everything carries a "checked" date, and some entries are marked "check first".** That is not
+padding. NYC shelter intake moved during 2026 — the old 30th Street centre at 400 East 30th Street
+has closed, and sources disagreed on both the exact changeover date and the women's intake
+address. Rather than pick one and sound confident, the app shows the disagreement and tells you to
+ring ahead. **A worker sending someone across the city to a closed door in February is a real
+harm.**
+
+The pack lives in [`assets/resources-nyc.js`](assets/resources-nyc.js) as plain data. Correct
+anything that has changed and it updates everywhere. Another city is another file of the same
+shape — nothing else in the app is New York specific.
+
+## Documents needed (Help → Documents needed)
+
+Eight checklists covering what paperwork each step actually requires: shelter, IDNYC, Social
+Security card, birth certificate, State ID, HRA benefits, CityFHEPS, and veterans' services.
+
+The first one matters most: **asking for shelter in New York City requires no documents at all.**
+If someone is turned away for lack of ID, that refusal is often reversible — the card says so, and
+gives the Coalition for the Homeless crisis line to call.
+
+---
+
 ## Printing and emailing
 
 Open a person → **Documentation** tab.
@@ -155,6 +189,7 @@ assets/
   styles.css          appearance of the app
   packet-style.js     appearance of the printed/emailed document
   workflow.js         stages, next steps, duplicate and priority checks
+  resources-nyc.js    NYC hotlines, shelters, departments, document checklists
   storage.js          local saving, backup and restore
   doc.js              builds the document in print, text and file form
   app.js              screens and editing

@@ -69,6 +69,7 @@
 
   var state = {
     view: 'today',
+    helpTab: 'app',
     personId: null,
     tab: 'overview',
     search: '',
@@ -1247,7 +1248,121 @@
 
   /* ---------- help ---------- */
 
+  var HELP_TABS = [
+    { k: 'app',       t: 'Using the app' },
+    { k: 'resources', t: 'NYC resources' },
+    { k: 'docs',      t: 'Documents needed' }
+  ];
+
   function viewHelp() {
+    var h = '<div class="help-nav no-print">' + HELP_TABS.map(function (t) {
+      return '<button data-action="help-tab" data-tab="' + t.k + '"' +
+        (state.helpTab === t.k ? ' class="active"' : '') + '>' + esc(t.t) + '</button>';
+    }).join('') + '</div>';
+
+    if (state.helpTab === 'resources') return h + helpResources();
+    if (state.helpTab === 'docs') return h + helpDocuments();
+    return h + helpAboutApp();
+  }
+
+  /* ---------- local resource pack ---------- */
+
+  function packHead(R) {
+    return '<div class="card pack-head">' +
+      '<div class="card-head"><h2>' + esc(R.region) + '</h2>' +
+      '<span class="badge">Checked ' + esc(Doc.fmtDate(R.checked)) + '</span></div>' +
+      '<div class="notice warn mb0"><strong>Ring ahead before sending anyone.</strong> ' +
+      esc(R.caution) + '</div>' +
+      '<div class="btn-row mt16 no-print">' +
+      '<input type="search" id="res-search" placeholder="Search — try &quot;shelter&quot;, &quot;food&quot;, &quot;veteran&quot;" ' +
+      'aria-label="Search resources">' +
+      '<button class="btn" data-action="print-help">Print this sheet</button>' +
+      '</div>' +
+      '<p class="small faint mb0 mt8 no-print">Printed, this becomes a street sheet you can hand to ' +
+      'someone. Tap any number on a phone to dial it.</p>' +
+      '</div>';
+  }
+
+  function resItem(it) {
+    var hay = [it.name, it.what, it.address, it.phone, it.phoneNote, it.web].filter(has).join(' ').toLowerCase();
+    var h = '<div class="res-item" data-hay="' + esc(hay) + '">';
+    h += '<div class="res-name">' + esc(it.name) +
+      (it.verify ? ' <span class="badge warn">check first</span>' : '') + '</div>';
+
+    var lines = '';
+    if (has(it.phone)) {
+      lines += '<div class="res-line"><span class="res-k">Call</span>' +
+        '<a class="res-tel" href="tel:' + esc(it.phone.replace(/[^0-9+]/g, '')) + '">' +
+        esc(it.phone) + '</a>' +
+        (has(it.phoneNote) ? '<span class="res-note">' + esc(it.phoneNote) + '</span>' : '') + '</div>';
+    }
+    if (has(it.address)) {
+      lines += '<div class="res-line"><span class="res-k">Go to</span><span>' + esc(it.address) + '</span></div>';
+    }
+    if (has(it.web)) {
+      lines += '<div class="res-line"><span class="res-k">Web</span>' +
+        '<a href="' + esc(it.web) + '" target="_blank" rel="noopener noreferrer">' +
+        esc(it.web.replace(/^https?:\/\//, '')) + '</a></div>';
+    }
+    if (lines) h += '<div class="res-lines">' + lines + '</div>';
+    if (has(it.what)) h += '<p class="res-what">' + esc(it.what) + '</p>';
+    return h + '</div>';
+  }
+
+  function helpResources() {
+    if (typeof RESOURCE_PACK === 'undefined') {
+      return '<div class="card"><p class="mb0">No local resource pack is loaded.</p></div>';
+    }
+    var R = RESOURCE_PACK;
+    var h = packHead(R);
+
+    R.groups.forEach(function (g) {
+      h += '<div class="card res-group" data-group="' + esc(g.id) + '">' +
+        '<div class="card-head"><h2>' + esc(g.title) + '</h2></div>' +
+        (has(g.intro) ? '<p class="section-hint">' + esc(g.intro) + '</p>' : '') +
+        g.items.map(resItem).join('') +
+        '<p class="res-empty small faint mb0" hidden>Nothing here matches that search.</p>' +
+        '</div>';
+    });
+
+    h += '<div class="card no-print"><p class="small faint mb0">' +
+      'Sources: NYC.gov and DHS, Legal Aid NYC, Coalition for the Homeless, DYCD, and the ' +
+      'Veterans Crisis Line. This pack lives in <code>assets/resources-nyc.js</code> — correct ' +
+      'anything that has changed, and it updates everywhere it appears.</p></div>';
+    return h;
+  }
+
+  /* ---------- what paperwork each step needs ---------- */
+
+  function helpDocuments() {
+    if (typeof RESOURCE_PACK === 'undefined') {
+      return '<div class="card"><p class="mb0">No local resource pack is loaded.</p></div>';
+    }
+    var R = RESOURCE_PACK;
+    var h = '<div class="card"><div class="card-head"><h2>What paperwork each step needs</h2></div>' +
+      '<p class="section-hint">Ordered the way the work actually happens. Missing documents slow ' +
+      'things down; they rarely stop them entirely, and never for shelter.</p>' +
+      '<div class="btn-row no-print"><button class="btn" data-action="print-help">Print this sheet</button></div>' +
+      '</div>';
+
+    R.documents.forEach(function (d) {
+      h += '<div class="card doc-need' + (d.good ? ' good' : '') + '">' +
+        '<div class="card-head"><h2>' + esc(d.title) + '</h2></div>' +
+        '<p class="doc-lede">' + esc(d.lede) + '</p>' +
+        '<ul class="doc-list">' +
+        d.need.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') +
+        '</ul>' +
+        (has(d.tip) ? '<div class="notice mb0">' + esc(d.tip) + '</div>' : '') +
+        '</div>';
+    });
+
+    h += '<div class="card no-print"><p class="small faint mb0">Each person also has their own ' +
+      'documents checklist on the <strong>Needs &amp; documents</strong> tab, for recording what ' +
+      'they actually hold.</p></div>';
+    return h;
+  }
+
+  function helpAboutApp() {
     return '<h1>How this app works</h1>' +
 
       '<div class="card"><h2>Nothing leaves this device</h2>' +
@@ -1311,6 +1426,8 @@
       return go('person');
     }
     if (a === 'tab') { state.tab = t.dataset.tab; return render(); }
+    if (a === 'help-tab') { state.helpTab = t.dataset.tab; return render(); }
+    if (a === 'print-help') { window.print(); return; }
 
     // Jump straight from a suggestion to the field that answers it.
     if (a === 'goto') {
@@ -1538,10 +1655,27 @@
     return { sections: state.doc.sections, settings: Store.settings() };
   }
 
+  function filterResources(q) {
+    var term = (q || '').trim().toLowerCase();
+    document.querySelectorAll('.res-group').forEach(function (g) {
+      var shown = 0;
+      g.querySelectorAll('.res-item').forEach(function (it) {
+        var match = !term || (it.dataset.hay || '').indexOf(term) !== -1;
+        it.hidden = !match;
+        if (match) shown++;
+      });
+      var empty = g.querySelector('.res-empty');
+      if (empty) empty.hidden = shown !== 0;
+      // Hide a whole group only while searching, so the page keeps its shape.
+      g.hidden = !!term && shown === 0;
+    });
+  }
+
   function onInput(e) {
     var t = e.target;
 
     if (t.id === 'search') { state.search = t.value; return renderListOnly(); }
+    if (t.id === 'res-search') return filterResources(t.value);
     if (t.id === 'doc-email') { state.doc.email = t.value; return; }
 
     var bind = t.dataset.bind;

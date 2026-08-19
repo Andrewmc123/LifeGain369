@@ -489,3 +489,78 @@ input:focus, select:focus, textarea:focus, button:focus-visible, [tabindex]:focu
   /* Full-size tap targets in the field: cold hands, gloves, one thumb. */
   .sug .btn, .today-row .btn, .milestone .btn { min-height: 44px; padding: 10px 16px; font-size: .9rem; }
 }
+
+/* ==========================================================================
+   Help — local resources and the paperwork guide.
+   These pages get printed and handed to people, so the print rules matter
+   as much as the screen ones.
+   ========================================================================== */
+
+.help-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.help-nav button {
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-soft);
+  border-radius: 999px; padding: 9px 16px; font: inherit; font-size: .9rem;
+  font-weight: 600; cursor: pointer; min-height: 40px;
+}
+.help-nav button:hover { background: var(--surface-2); color: var(--text); }
+.help-nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+#res-search {
+  flex: 1; min-width: 200px; min-height: 44px; padding: 10px 14px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 1rem;
+}
+#res-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.res-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.res-item:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.res-name { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+.res-lines { display: grid; gap: 4px; margin-bottom: 6px; }
+.res-line { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: .92rem; }
+.res-line .res-k {
+  flex: none; width: 46px; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-faint); font-weight: 700;
+}
+/* A phone number is the most important thing on the page: make it big and
+   obviously tappable, because it is read aloud or dialled in the dark. */
+.res-tel {
+  font-size: 1.12rem; font-weight: 700; color: var(--accent-dark);
+  text-decoration: none; letter-spacing: .01em;
+}
+.res-tel:hover { text-decoration: underline; }
+.res-note { color: var(--text-faint); font-size: .84rem; }
+.res-what { margin: 0; font-size: .88rem; color: var(--text-soft); line-height: 1.5; }
+.res-line a { color: var(--info); }
+
+.doc-need.good { border-left: 4px solid var(--ok); }
+.doc-lede { font-weight: 650; margin: -4px 0 12px; color: var(--text); }
+.doc-list { margin: 0 0 14px; padding-left: 20px; }
+.doc-list li { margin-bottom: 7px; line-height: 1.5; font-size: .93rem; }
+.doc-list li:last-child { margin-bottom: 0; }
+
+@media (max-width: 720px) {
+  .res-line .res-k { width: 100%; }
+  .help-nav button { flex: 1; }
+  /* Dialling is the most important thing anyone does on this page, and it
+     happens one-handed, outdoors, often in a hurry. Give it a real target. */
+  .res-tel {
+    display: inline-flex; align-items: center; min-height: 44px;
+    padding: 4px 12px 4px 0; font-size: 1.2rem;
+  }
+}
+
+@media print {
+  /* Hand-out mode: drop the app furniture, keep every number. */
+  .help-nav, #res-search, .pack-head .btn-row, .no-print { display: none !important; }
+  .res-group, .doc-need, .pack-head {
+    box-shadow: none; border: 0; border-bottom: 1px solid #999;
+    border-radius: 0; padding: 0 0 10px; margin-bottom: 14px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .res-item { break-inside: avoid; page-break-inside: avoid; padding: 8px 0; }
+  .res-tel { color: #000; font-size: 12pt; }
+  .res-tel::after { content: ""; }
+  .res-line a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; color: #444; }
+  .res-what, .doc-list li { font-size: 9.5pt; }
+  .notice { border: 1px solid #999; background: none; }
+}
