@@ -41,6 +41,19 @@ Works in Chrome, Edge, and Firefox, on a laptop, tablet, or phone.
 
 ---
 
+## Seeing it work: the sample caseload
+
+A new install is empty, which makes the app hard to judge and harder to learn. On the Overview
+screen (or in Settings) there is **Load sample caseload**: six invented people who between them
+trigger every rule in the app — someone who may qualify as chronically homeless, someone recently
+housed, a first contact with no consent yet, an overdue follow-up, a young adult who should never
+be sent to adult intake, and a duplicate.
+
+They are **badged "sample"**, never mix with real records, and **Remove sample records** takes all
+six and nothing else. Good for training a new worker.
+
+---
+
 ## Today, and the plan
 
 **Today** is the screen the app opens on. It is the round before you walk it:
@@ -81,6 +94,30 @@ wrong place for it. The app only records whether it is held somewhere official.
 One note on assessment tools: the **VI-SPDAT was retired in 2023** and communities have moved to
 their own replacements. This app does not score anyone, and you should not treat anything here as
 a substitute for your local coordinated entry assessment.
+
+---
+
+## Overview: the caseload at a glance
+
+- **Where the caseload is** — how many people sit at each stage. A pile-up at one stage is
+  usually a bottleneck worth naming; most caseloads stall at paperwork.
+- **Contact over time** — contacts per week for the last twelve weeks. Showing up repeatedly
+  *is* the intervention, and this is the shape of it.
+- **Progress worth reporting** — engaged, photo ID in hand, housed, and how many may qualify for
+  permanent supportive housing. The numbers a funder asks for, without counting by hand.
+- **What people need** and **where people stay**, ranked.
+
+Charts are hand-drawn SVG — no library, nothing loaded from the internet — and every bar states
+its number in text beside it, so nothing depends on reading a bar by eye or on seeing colour.
+
+## History: one timeline
+
+The **History** tab merges contacts, milestones, goals and referrals onto a single dated spine,
+newest first, with anything still in the future marked *planned*. Those four things all carry
+dates but live in four different places, so nobody ever sees the shape of a person's arc. This is
+usually the first thing a worker covering someone else's caseload actually needs.
+
+The editable contact log sits underneath, unchanged.
 
 ---
 
@@ -190,6 +227,7 @@ assets/
   packet-style.js     appearance of the printed/emailed document
   workflow.js         stages, next steps, duplicate and priority checks
   resources-nyc.js    NYC hotlines, shelters, departments, document checklists
+  sample-data.js      the six-person demo caseload
   storage.js          local saving, backup and restore
   doc.js              builds the document in print, text and file form
   app.js              screens and editing

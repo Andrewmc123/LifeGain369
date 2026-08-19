@@ -564,3 +564,89 @@ input:focus, select:focus, textarea:focus, button:focus-visible, [tabindex]:focu
   .res-what, .doc-list li { font-size: 9.5pt; }
   .notice { border: 1px solid #999; background: none; }
 }
+
+/* ==========================================================================
+   Dashboard charts, timeline, and the sample-data banner.
+   Every chart states its number in text beside the bar, so nothing here
+   depends on colour or on the bar being read accurately by eye.
+   ========================================================================== */
+
+.page-head {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.page-head h1 { margin: 0; flex: 1; }
+.center-row { justify-content: center; }
+.empty-mark { font-size: 2.6rem; line-height: 1; margin-bottom: 10px; }
+
+.sample-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sample-banner .btn { margin-left: auto; }
+
+/* ---------- bar rows ---------- */
+.chart-row {
+  display: grid; grid-template-columns: minmax(96px, 1.3fr) 3fr auto;
+  align-items: center; gap: 10px; padding: 5px 0;
+  font-size: .88rem;
+}
+.chart-label { color: var(--text-soft); line-height: 1.3; }
+.chart-track {
+  height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden;
+}
+.chart-track i {
+  display: block; height: 100%; background: var(--accent); border-radius: 999px;
+  transition: width .35s ease; min-width: 0;
+}
+.chart-n { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 24px; text-align: right; }
+.chart-note { grid-column: 2 / -1; font-size: .76rem; color: var(--text-faint); margin-top: -2px; }
+
+/* ---------- sparkline ---------- */
+.spark svg { width: 100%; height: 64px; display: block; overflow: visible; }
+.spark-line { fill: none; stroke: var(--accent); stroke-width: 1.6; vector-effect: non-scaling-stroke;
+  stroke-linejoin: round; stroke-linecap: round; }
+.spark-fill { fill: var(--accent-soft); stroke: none; }
+.spark-foot {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: .74rem; color: var(--text-faint); margin-top: 6px;
+}
+.spark-foot span:nth-child(2) { font-weight: 700; color: var(--text-soft); }
+
+/* ---------- timeline ---------- */
+.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.tl { position: relative; padding: 0 0 18px 34px; }
+/* the spine */
+.tl::before {
+  content: ""; position: absolute; left: 10px; top: 20px; bottom: -2px;
+  width: 2px; background: var(--border);
+}
+.tl:last-child { padding-bottom: 0; }
+.tl:last-child::before { display: none; }
+.tl-dot {
+  position: absolute; left: 0; top: 1px; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border-strong);
+  font-size: .68rem; color: var(--text-soft);
+}
+.tl.milestone .tl-dot { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+.tl.goal .tl-dot { background: var(--ok-soft); border-color: var(--ok); color: var(--ok); }
+.tl.referral .tl-dot { background: var(--info-soft); border-color: var(--info); color: var(--info); }
+.tl.story .tl-dot { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+.tl.ahead .tl-dot { border-style: dashed; }
+.tl.ahead .tl-body { opacity: .75; }
+.tl-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tl-date { font-weight: 700; font-size: .84rem; }
+.tl-ago { font-size: .74rem; color: var(--text-faint); }
+.tl-title { font-size: .94rem; font-weight: 600; margin-top: 1px; }
+.tl-detail { margin: 3px 0 0; font-size: .86rem; color: var(--text-soft); line-height: 1.45; }
+
+@media (max-width: 720px) {
+  .chart-row { grid-template-columns: 1fr auto; }
+  .chart-track { grid-column: 1 / -1; order: 3; }
+  .chart-note { order: 4; }
+  .sample-banner .btn { margin-left: 0; width: 100%; min-height: 44px; }
+  .page-head .btn { width: 100%; }
+}
+
+@media print {
+  .chart-track i { background: #555 !important; }
+  .tl::before, .tl-dot { border-color: #999; }
+  .timeline, .tl { break-inside: avoid; page-break-inside: avoid; }
+}

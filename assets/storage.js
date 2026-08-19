@@ -57,6 +57,9 @@ var Store = (function () {
       createdAt: now,
       updatedAt: now,
       archived: false,
+      // Set only on the explorable demo caseload, so it can be badged on
+      // screen and removed in one click without touching real records.
+      isSample: false,
 
       // Identity
       photo: '',            // downscaled data URL
@@ -419,6 +422,22 @@ var Store = (function () {
         }
       });
       return saveNow().then(function () { return { added: added, updated: updated }; });
+    },
+
+    // Bulk-add, used by the sample caseload. One write, not six.
+    addMany: function (list) {
+      list.forEach(function (p) { data.people.unshift(p); });
+      return saveNow();
+    },
+
+    removeSamples: function () {
+      var before = data.people.length;
+      data.people = data.people.filter(function (p) { return !p.isSample; });
+      return saveNow().then(function () { return before - data.people.length; });
+    },
+
+    hasSamples: function () {
+      return data.people.some(function (p) { return p.isSample; });
     },
 
     uid: uid,

@@ -61,7 +61,7 @@
     { k: 'goals',    t: 'Goals' },
     { k: 'story',    t: 'My Story' },
     { k: 'needs',    t: 'Needs & documents' },
-    { k: 'log',      t: 'Contact log' },
+    { k: 'log',      t: 'History' },
     { k: 'doc',      t: 'Documentation' }
   ];
 
@@ -317,10 +317,79 @@
     window.scrollTo(0, 0);
   }
 
+
+  /* ==================================================================
+     Small chart primitives.
+
+     Hand-drawn SVG rather than a charting library: the app loads nothing
+     from the internet, and these are simple enough that a dependency
+     would cost more than it saves. Every chart also states its numbers in
+     text, so it still reads on a screen reader and in grayscale print.
+     ================================================================== */
+
+  function barRow(label, n, max, note) {
+    var pct = max > 0 ? Math.round((n / max) * 100) : 0;
+    return '<div class="chart-row">' +
+      '<span class="chart-label">' + esc(label) + '</span>' +
+      '<span class="chart-track"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="chart-n">' + n + '</span>' +
+      (note ? '<span class="chart-note">' + esc(note) + '</span>' : '') +
+      '</div>';
+  }
+
+  // Contacts per week for the last 12 weeks.
+  function sparkline(people) {
+    var weeks = 12, buckets = [], i;
+    for (i = 0; i < weeks; i++) buckets.push(0);
+    var now = Date.now();
+    people.forEach(function (p) {
+      (p.log || []).forEach(function (l) {
+        if (!has(l.date)) return;
+        var t = new Date(l.date + 'T00:00:00').getTime();
+        if (isNaN(t)) return;
+        var wk = Math.floor((now - t) / (7 * 86400000));
+        if (wk >= 0 && wk < weeks) buckets[weeks - 1 - wk]++;
+      });
+    });
+    var max = Math.max.apply(null, buckets.concat([1]));
+    var total = buckets.reduce(function (a, b) { return a + b; }, 0);
+    var w = 100, hgt = 28, step = w / (weeks - 1);
+    var pts = buckets.map(function (v, ix) {
+      return (ix * step).toFixed(1) + ',' + (hgt - (v / max) * hgt).toFixed(1);
+    }).join(' ');
+    var area = '0,' + hgt + ' ' + pts + ' ' + w + ',' + hgt;
+
+    return '<div class="spark">' +
+      '<svg viewBox="0 0 100 28" preserveAspectRatio="none" role="img" ' +
+      'aria-label="Contacts per week over the last twelve weeks. Total ' + total + '.">' +
+      '<polygon points="' + area + '" class="spark-fill"></polygon>' +
+      '<polyline points="' + pts + '" class="spark-line"></polyline>' +
+      '</svg>' +
+      '<div class="spark-foot"><span>12 weeks ago</span><span>' + total +
+      ' contacts logged</span><span>this week</span></div>' +
+      '</div>';
+  }
+
+  function countBy(people, get) {
+    var map = {};
+    people.forEach(function (p) {
+      var vals = get(p);
+      if (!Array.isArray(vals)) vals = has(vals) ? [vals] : [];
+      vals.forEach(function (v) { if (has(v)) map[v] = (map[v] || 0) + 1; });
+    });
+    return Object.keys(map).map(function (k) { return { k: k, n: map[k] }; })
+      .sort(function (a, b) { return b.n - a.n; });
+  }
+
   /* ---------- dashboard ---------- */
 
   function viewDashboard() {
-    var people = Store.all().filter(function (p) { return !p.archived; });
+    var all = Store.all();
+    var people = all.filter(function (p) { return !p.archived; });
+    var s = Store.settings();
+
+    if (!people.length) return viewDashboardEmpty();
+
     var goals = people.reduce(function (n, p) { return n + activeGoals(p).length; }, 0);
     var achieved = people.reduce(function (n, p) {
       return n + (p.goals || []).filter(function (g) { return g.status === 'Achieved'; }).length;
@@ -329,54 +398,129 @@
     var contacts = people.reduce(function (n, p) {
       return n + (p.log || []).filter(function (l) { return l.date >= weekAgo; }).length;
     }, 0);
-
-    var monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-    var stale = people.filter(function (p) {
-      var lc = lastContact(p);
-      return !lc || lc < monthAgo;
-    });
-
-    var recent = people.slice().sort(function (a, b) {
-      return String(b.updatedAt).localeCompare(String(a.updatedAt));
-    }).slice(0, 5);
+    var housed = people.filter(function (p) { return has(p.housedDate); }).length;
+    var engaged = people.filter(function (p) { return has(p.engagementDate); }).length;
+    var withId = people.filter(function (p) { return Flow.coreDocsHeld(p).hasId; }).length;
+    var chronic = people.filter(function (p) { return Flow.chronicSignal(p).qualifies; }).length;
 
     var h = '';
-    h += '<div class="card-head"><h1 class="mb0">Overview</h1><div class="spacer"></div>' +
+    h += '<div class="page-head"><h1>Overview</h1>' +
       '<button class="btn primary" data-action="new-person">+ New person</button></div>';
 
-    if (!people.length) {
-      h += '<div class="empty"><span class="big">👋</span><h2>No records yet</h2>' +
-        '<p class="muted">Start by adding the first person you meet. You can fill in as little or as much as they want to share.</p>' +
-        '<button class="btn primary" data-action="new-person">+ Add the first person</button></div>';
-      h += privacyNotice();
-      return h;
-    }
+    h += sampleBanner();
 
+    /* --- headline numbers --- */
     h += '<div class="grid cols-4 mb16">' +
-      stat(people.length, people.length === 1 ? 'Person' : 'People') +
-      stat(goals, 'Active goals') +
-      stat(achieved, 'Goals achieved') +
-      stat(contacts, 'Contacts this week') +
+      stat(people.length, 'people') +
+      stat(contacts, 'contacts this week') +
+      stat(goals, 'active goals') +
+      stat(achieved, 'goals achieved') +
       '</div>';
 
+    /* --- where the caseload is --- */
+    var byStage = {};
+    people.forEach(function (p) {
+      var k = Flow.stageOf(p);
+      byStage[k] = (byStage[k] || 0) + 1;
+    });
+    var stageMax = Math.max.apply(null, Flow.STAGES.map(function (st) { return byStage[st.k] || 0; }).concat([1]));
+
+    h += '<div class="card"><div class="card-head"><h2>Where the caseload is</h2></div>' +
+      '<p class="section-hint">Worked out from each record, not entered by hand. A pile-up at one ' +
+      'stage is usually a bottleneck worth naming — most caseloads stall at paperwork.</p>' +
+      Flow.STAGES.map(function (st) {
+        return barRow(st.t, byStage[st.k] || 0, stageMax);
+      }).join('') +
+      '</div>';
+
+    /* --- contact rhythm --- */
+    h += '<div class="card"><div class="card-head"><h2>Contact over time</h2></div>' +
+      '<p class="section-hint">Showing up repeatedly is the intervention. This is the shape of that.</p>' +
+      sparkline(people) +
+      '</div>';
+
+    /* --- outcomes worth reporting --- */
+    h += '<div class="card"><div class="card-head"><h2>Progress worth reporting</h2></div>' +
+      '<p class="section-hint">The numbers a funder or a board asks for, without anyone having to ' +
+      'count them by hand.</p>' +
+      '<div class="grid cols-2">' +
+      '<div>' + barRow('Engaged', engaged, people.length, 'of ' + people.length) +
+      barRow('Photo ID in hand', withId, people.length, 'of ' + people.length) + '</div>' +
+      '<div>' + barRow('Housed', housed, people.length, 'of ' + people.length) +
+      barRow('May qualify for PSH', chronic, people.length, 'chronic definition') + '</div>' +
+      '</div>' +
+      (chronic ? '<div class="notice mb0">' + Flow.plural(chronic, 'person', 'people') +
+        ' may meet the chronic homelessness definition. That is the gate to permanent supportive ' +
+        'housing — worth raising with your coordinated entry lead.</div>' : '') +
+      '</div>';
+
+    /* --- needs and living situations --- */
+    var needs = countBy(people, function (p) { return p.needs; }).slice(0, 8);
+    var situations = countBy(people, function (p) { return p.stay.situation; }).slice(0, 8);
+    var needMax = needs.length ? needs[0].n : 1;
+    var sitMax = situations.length ? situations[0].n : 1;
+
     h += '<div class="grid cols-2">';
+    h += '<div class="card"><div class="card-head"><h2>What people need</h2></div>' +
+      (needs.length
+        ? needs.map(function (r) { return barRow(r.k, r.n, needMax); }).join('')
+        : '<p class="muted mb0">No needs recorded yet.</p>') +
+      '</div>';
+    h += '<div class="card"><div class="card-head"><h2>Where people stay</h2></div>' +
+      (situations.length
+        ? situations.map(function (r) { return barRow(r.k, r.n, sitMax); }).join('')
+        : '<p class="muted mb0">No living situations recorded yet.</p>') +
+      '</div>';
+    h += '</div>';
+
+    /* --- recent --- */
+    var recent = people.slice().sort(function (a, b) {
+      return (b.updatedAt || '').localeCompare(a.updatedAt || '');
+    }).slice(0, 6);
 
     h += '<div class="card"><div class="card-head"><h2>Recently updated</h2></div>' +
-      recent.map(personRow).join('') + '</div>';
+      recent.map(function (p) {
+        return '<div class="today-row">' + avatar(p, 'sm') +
+          '<div class="tr-body">' +
+          '<button class="tr-name" data-action="goto" data-id="' + p.id + '" data-tab="overview">' +
+          esc(Doc.shortName(p)) + '</button>' +
+          '<div class="small faint">' + esc(Flow.stageMeta(Flow.stageOf(p)).t) +
+          (lastContact(p) ? ' · last seen ' + esc(Flow.agoPhrase(Flow.daysAgo(lastContact(p)))) : '') +
+          '</div></div>' +
+          (p.isSample ? '<span class="badge">sample</span>' : '') +
+          '</div>';
+      }).join('') +
+      '</div>';
 
-    h += '<div class="card"><div class="card-head"><h2>Check in soon</h2></div>';
-    if (!stale.length) {
-      h += '<p class="muted mb0">Everyone has been contacted in the last 30 days.</p>';
-    } else {
-      h += '<p class="section-hint">No contact logged in 30 days.</p>' +
-        stale.slice(0, 6).map(personRow).join('');
-      if (stale.length > 6) h += '<p class="small faint mb0">+ ' + (stale.length - 6) + ' more</p>';
-    }
-    h += '</div>';
-
-    h += '</div>';
     h += privacyNotice();
     return h;
+  }
+
+  // First run: the app cannot show a caseload it does not have, so offer one.
+  function viewDashboardEmpty() {
+    return '<div class="page-head"><h1>Overview</h1></div>' +
+      '<div class="card empty"><div class="empty-mark" aria-hidden="true">🏠</div>' +
+      '<h2>No records yet</h2>' +
+      '<p class="muted">Start by adding the first person you meet. Fill in as little or as much ' +
+      'as they are willing to share — nothing in this app is required.</p>' +
+      '<div class="btn-row center-row">' +
+      '<button class="btn primary" data-action="new-person">+ Add the first person</button>' +
+      '<button class="btn" data-action="load-sample">Explore with sample data</button>' +
+      '</div>' +
+      '<p class="small faint mt16 mb0">The sample caseload is six invented people who between them ' +
+      'show every part of the app working. They are badged as samples and can be removed in one click.</p>' +
+      '</div>' +
+      privacyNotice();
+  }
+
+  // Shown wherever sample records are present, so they are never mistaken
+  // for real ones.
+  function sampleBanner() {
+    if (!Store.hasSamples()) return '';
+    return '<div class="notice warn sample-banner">' +
+      '<strong>Sample records are loaded.</strong> Six invented people, badged <span class="badge">sample</span>, ' +
+      'so you can see the app working. They are not real. ' +
+      '<button class="btn sm" data-action="clear-sample">Remove sample records</button></div>';
   }
 
   function stat(n, k) {
@@ -732,8 +876,100 @@
     return h;
   }
 
+  /* ==================================================================
+     One chronological spine.
+
+     Contacts, goals, milestones and referrals all carry dates but live in
+     four different places, so nobody ever sees the shape of a person's
+     arc. Merging them is the cheapest way to make a record feel like a
+     story rather than a form — and it is often the first thing a worker
+     covering someone else's caseload actually needs.
+     ================================================================== */
+
+  var EVENT_KINDS = {
+    contact:   { icon: '•', cls: 'contact',   label: 'Contact' },
+    milestone: { icon: '★', cls: 'milestone', label: 'Milestone' },
+    goal:      { icon: '◆', cls: 'goal',      label: 'Goal' },
+    referral:  { icon: '→', cls: 'referral',  label: 'Referral' },
+    story:     { icon: '❝', cls: 'story',     label: 'Story' }
+  };
+
+  function timelineEvents(p) {
+    var ev = [];
+    function push(date, kind, title, detail) {
+      if (!has(date)) return;
+      ev.push({ date: date, kind: kind, title: title, detail: detail || '' });
+    }
+
+    (p.log || []).forEach(function (l) {
+      push(l.date, 'contact', l.type || 'Contact',
+        [l.notes, l.worker ? '— ' + l.worker : ''].filter(has).join(' '));
+    });
+
+    push(p.createdAt ? p.createdAt.slice(0, 10) : '', 'milestone', 'Record started', '');
+    push(p.engagementDate, 'milestone', 'Began working together', 'Date of engagement');
+    push(p.assessmentDate, 'milestone', 'Assessment completed', '');
+    push(p.housedDate, 'milestone', 'Moved in', 'Keys in hand');
+    push(p.consent.signedDate, 'milestone', 'Consent recorded',
+      has(p.consent.signedName) ? 'Signed ' + p.consent.signedName : '');
+    push(p.story.recordedAt, 'story', 'Story recorded',
+      has(p.story.recordedBy) ? 'Written down by ' + p.story.recordedBy : '');
+
+    (p.goals || []).forEach(function (g) {
+      if (g.status === 'Achieved') {
+        push(g.targetDate || (g.updatedAt || '').slice(0, 10), 'goal',
+          'Achieved: ' + (g.title || 'goal'), g.notes);
+      } else if (has(g.targetDate)) {
+        push(g.targetDate, 'goal', 'Goal target: ' + (g.title || 'goal'), g.status);
+      }
+    });
+
+    (p.referrals || []).forEach(function (r) {
+      push(r.date, 'referral', (r.org || 'Referral') + (has(r.service) ? ' — ' + r.service : ''),
+        r.status);
+    });
+
+    // Newest first: the recent past is what a worker needs before a visit.
+    ev.sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+    return ev;
+  }
+
+  function timeline(p) {
+    var ev = timelineEvents(p);
+    if (!ev.length) {
+      return '<div class="empty"><p class="muted mb0">Nothing dated yet. Log a contact and the ' +
+        'timeline starts building itself.</p></div>';
+    }
+
+    var future = Flow.todayStr();
+    return '<ol class="timeline">' + ev.map(function (e) {
+      var k = EVENT_KINDS[e.kind] || EVENT_KINDS.contact;
+      var ahead = e.date > future;
+      return '<li class="tl ' + k.cls + (ahead ? ' ahead' : '') + '">' +
+        '<span class="tl-dot" aria-hidden="true">' + k.icon + '</span>' +
+        '<div class="tl-body">' +
+        '<div class="tl-top">' +
+        '<span class="tl-date">' + esc(Doc.fmtDate(e.date)) + '</span>' +
+        '<span class="tl-ago">' + esc(ahead ? 'planned' : Flow.agoPhrase(Flow.daysAgo(e.date))) + '</span>' +
+        '</div>' +
+        '<div class="tl-title">' + esc(e.title) + '</div>' +
+        (has(e.detail) ? '<p class="tl-detail">' + esc(e.detail) + '</p>' : '') +
+        '</div></li>';
+    }).join('') + '</ol>';
+  }
+
   function tabLog(p) {
     var h = '';
+
+    var evCount = timelineEvents(p).length;
+    h += '<div class="card"><div class="card-head"><h2>Timeline</h2>' +
+      '<span class="pill">' + evCount + '</span>' +
+      '<div class="spacer"></div>' +
+      '<button class="btn" data-action="quick-log">＋ Log contact</button></div>' +
+      '<p class="section-hint">Everything dated on this record, newest first — contacts, ' +
+      'milestones, goals and referrals on one spine.</p>' +
+      timeline(p) +
+      '</div>';
 
     h += '<div class="card"><div class="card-head"><h2 class="mb0">Contact log</h2><div class="spacer"></div>' +
       '<button class="btn primary" data-action="add-log">+ Log a contact</button></div>' +
@@ -1243,6 +1479,16 @@
       '<p class="section-hint">Removes every record from this device. Back up first — this cannot be undone.</p>' +
       '<button class="btn danger" data-action="wipe">Erase all records</button></div>';
 
+    h += '<div class="card"><div class="card-head"><h2>Sample caseload</h2></div>' +
+      '<p class="section-hint">Six invented people who between them exercise every part of the ' +
+      'app — useful for training a new worker, or for seeing what a screen looks like with ' +
+      'something in it. They are badged as samples and never mix with real records.</p>' +
+      '<div class="btn-row">' +
+      (Store.hasSamples()
+        ? '<button class="btn" data-action="clear-sample">Remove sample records</button>'
+        : '<button class="btn" data-action="load-sample">Load sample caseload</button>') +
+      '</div></div>';
+
     return h;
   }
 
@@ -1427,6 +1673,23 @@
     }
     if (a === 'tab') { state.tab = t.dataset.tab; return render(); }
     if (a === 'help-tab') { state.helpTab = t.dataset.tab; return render(); }
+
+    if (a === 'load-sample') {
+      if (typeof SAMPLE === 'undefined') return toast('Sample data is not available.');
+      Store.addMany(SAMPLE.build(Store.blankPerson, Store.uid)).then(function () {
+        go('today');
+        toast('Sample caseload loaded. Remove it any time from Overview or Settings.');
+      });
+      return;
+    }
+    if (a === 'clear-sample') {
+      Store.removeSamples().then(function (n) {
+        state.personId = null;
+        render();
+        toast(n + ' sample record' + (n === 1 ? '' : 's') + ' removed.');
+      });
+      return;
+    }
     if (a === 'print-help') { window.print(); return; }
 
     // Jump straight from a suggestion to the field that answers it.
