@@ -14,6 +14,7 @@ var Doc = (function () {
     { key: 'photo',    label: 'Photo' },
     { key: 'identity', label: 'Name & contact' },
     { key: 'stay',     label: 'Where they stay' },
+    { key: 'timeline', label: 'Housing history & key dates' },
     { key: 'goals',    label: 'Goals — what they’re working toward' },
     { key: 'story',    label: 'My Story (in their words)' },
     { key: 'needs',    label: 'Needs, barriers & health' },
@@ -25,10 +26,10 @@ var Doc = (function () {
   ];
 
   var PRESETS = {
-    full:     { label: 'Full record', on: ['photo','identity','stay','goals','story','needs','docs','log','referrals','consent','signature'] },
-    referral: { label: 'Referral packet', on: ['photo','identity','stay','goals','needs','docs','consent','signature'] },
+    full:     { label: 'Full record', on: ['photo','identity','stay','timeline','goals','story','needs','docs','log','referrals','consent','signature'] },
+    referral: { label: 'Referral packet', on: ['photo','identity','stay','timeline','goals','needs','docs','consent','signature'] },
     story:    { label: 'Story sheet', on: ['photo','identity','story','goals','consent'] },
-    housing:  { label: 'Housing application support', on: ['identity','stay','goals','docs','needs','consent','signature'] },
+    housing:  { label: 'Housing application support', on: ['identity','stay','timeline','goals','docs','needs','consent','signature'] },
     contact:  { label: 'Contact card', on: ['photo','identity','stay'] }
   };
 
@@ -183,6 +184,37 @@ var Doc = (function () {
       out.push(stayRows ? '<div class="p-grid">' + stayRows + '</div>' : none('No location recorded.'));
       if (has(s.safetyNotes)) out.push('<div style="margin-top:8px"><strong>Safety notes:</strong> ' + esc(s.safetyNotes) + '</div>');
       if (has(s.stayNotes)) out.push('<div style="margin-top:6px">' + esc(s.stayNotes) + '</div>');
+    }
+
+    /* The dates a receiving agency asks for first, and that are hardest to
+       reconstruct from memory. Deliberately does NOT carry the worker-facing
+       next steps: those are internal prompts, not something to hand over. */
+    if (want('timeline')) {
+      out.push('<h2 class="p-sec">Housing history &amp; key dates</h2>');
+      var hm = p.hmis || {};
+      var tRows = [
+        row('Homeless since', fmtDate(s.homelessSince) + (daysSince(s.homelessSince) ? ' (' + daysSince(s.homelessSince) + ')' : '')),
+        row('Months homeless (approx.)', hm.homelessMonths),
+        row('Separate episodes in last 3 years', hm.homelessTimes),
+        row('Disabling condition recorded', p.disability ? 'Yes' : ''),
+        row('Veteran', p.veteran ? 'Yes' : ''),
+        row('Date of engagement', fmtDate(p.engagementDate)),
+        row('Assessment completed', fmtDate(p.assessmentDate)),
+        row('Moved in', fmtDate(p.housedDate)),
+        row('Continuum of Care', hm.coc),
+        row('Local client ID', hm.clientCode),
+        row('Household', hm.householdType)
+      ].filter(has).join('');
+      out.push(tRows ? '<div class="p-grid">' + tRows + '</div>' : none('No dates recorded yet.'));
+
+      var ch = (typeof Flow !== 'undefined') ? Flow.chronicSignal(p) : null;
+      if (ch && ch.qualifies) {
+        out.push('<div class="p-flag"><strong>May meet the HUD definition of chronic homelessness</strong> — ' +
+          'recorded as ' + Math.round(ch.months) + ' months' +
+          (ch.times ? ' across ' + ch.times + ' episodes' : '') +
+          ' with a disabling condition. To be confirmed by an assessor; this is a prompt to check, ' +
+          'not a determination.</div>');
+      }
     }
 
     /* goals */
@@ -359,6 +391,26 @@ var Doc = (function () {
       line('Homeless since', fmtDate(s.homelessSince));
       line('Best time to find', s.bestTimeToFind);
       line('Safety notes', s.safetyNotes);
+    }
+
+    if (want('timeline')) {
+      head('Housing history & key dates');
+      var hmt = p.hmis || {};
+      line('Homeless since', fmtDate(s.homelessSince));
+      line('Months homeless (approx.)', hmt.homelessMonths);
+      line('Separate episodes in last 3 years', hmt.homelessTimes);
+      line('Disabling condition recorded', p.disability ? 'Yes' : '');
+      line('Veteran', p.veteran ? 'Yes' : '');
+      line('Date of engagement', fmtDate(p.engagementDate));
+      line('Assessment completed', fmtDate(p.assessmentDate));
+      line('Moved in', fmtDate(p.housedDate));
+      line('Continuum of Care', hmt.coc);
+      line('Local client ID', hmt.clientCode);
+      var cht = (typeof Flow !== 'undefined') ? Flow.chronicSignal(p) : null;
+      if (cht && cht.qualifies) {
+        L.push('  ** May meet the HUD chronic homelessness definition — to be');
+        L.push('     confirmed by an assessor, not a determination made here. **');
+      }
     }
 
     if (want('goals')) {

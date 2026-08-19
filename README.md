@@ -7,6 +7,7 @@ A record keeper for street outreach. It holds, for each person you meet:
 - **a photo** — taken with consent, shrunk automatically so the app stays fast
 - **My Story** — their own account of how they got here, their strengths and hopes
 - needs, barriers, benefits, a documents checklist, a contact log, and referrals
+- **a plan** — what stage they are at, and what is worth doing next
 - **documentation** you can print, save as PDF, email, or download as a file
 
 Everything is stored **on the device only**. There is no account, no server, and nothing is
@@ -39,6 +40,49 @@ Works in Chrome, Edge, and Firefox, on a laptop, tablet, or phone.
 
 ---
 
+## Today, and the plan
+
+**Today** is the screen the app opens on. It is the round before you walk it:
+
+- **Due now** — follow-ups you set, on the day they fall due
+- **Needs attention** — consent never recorded, a goal marked stuck, someone nobody has seen in weeks
+- **Going quiet** — no contact in over 14 days and nothing planned (change the window in Settings)
+- a **backup reminder** when it has been more than a week
+
+Every person also has a **Plan & next steps** tab:
+
+- **A stage** — First contact → Building trust → Engaged → Papers in hand → Assessed → Housed →
+  Staying housed. The stage is worked out from what is in the record, not set by hand, so it stays
+  honest. You can override it when the record does not tell the whole story.
+- **Next steps**, generated from the record and sorted into *Needs attention*, *This week*, and
+  *When the moment is right*. That last group is deliberate: a blank field is usually trust that
+  has not been earned yet, not sloppy data entry, and the app never treats it as a failing.
+- **Milestones** — date of engagement, assessment date, move-in date. One tap each. These are the
+  dates funders and agencies ask for later and that nobody can reconstruct from memory.
+- **A priority housing check.** Permanent supportive housing is usually gated on HUD's
+  *chronically homeless* definition — a disabling condition plus a year of homelessness, or four
+  or more episodes in three years. Workers routinely miss that someone already qualifies, so the
+  app raises it. **It is a prompt to check with your coordinated entry lead, never a
+  determination.**
+- **Possible duplicates** — two workers meeting the same person on different nights is normal.
+  It is only cheap to fix early.
+
+### What intake will ask anyway
+
+The Plan tab tracks which of HUD's Universal Data Elements are already known. **This app is not
+an HMIS and reports to nobody** — but intake asks these same questions, and making someone
+recount the worst years of their life a second time because a form was blank is a harm worth
+avoiding. Fill them in as they come up naturally, never as a checklist run at someone.
+
+**The Social Security number itself is deliberately not stored.** A phone in the field is the
+wrong place for it. The app only records whether it is held somewhere official.
+
+One note on assessment tools: the **VI-SPDAT was retired in 2023** and communities have moved to
+their own replacements. This app does not score anyone, and you should not treat anything here as
+a substitute for your local coordinated entry assessment.
+
+---
+
 ## Printing and emailing
 
 Open a person → **Documentation** tab.
@@ -47,6 +91,14 @@ Choose which sections belong in this particular document. A shelter referral doe
 someone's whole life story; a housing application does not need the contact log. There are
 ready-made starting points (Full record, Referral packet, Story sheet, Housing application
 support, Contact card), and you can tick sections on or off from there.
+
+The **Housing history & key dates** section collects the things a receiving agency asks for
+first — how long they have been homeless, engagement and assessment dates, Continuum of Care,
+and the chronic-homelessness flag where it applies. It is in the Referral and Housing presets and
+out of the Story sheet.
+
+**Your next steps never leave the team.** The suggestions on the Plan tab are internal prompts
+for the worker and are deliberately excluded from every printed and emailed document.
 
 Then:
 
@@ -102,6 +154,7 @@ Start App.bat         launcher (serves the app locally, then opens it)
 assets/
   styles.css          appearance of the app
   packet-style.js     appearance of the printed/emailed document
+  workflow.js         stages, next steps, duplicate and priority checks
   storage.js          local saving, backup and restore
   doc.js              builds the document in print, text and file form
   app.js              screens and editing

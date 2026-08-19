@@ -344,3 +344,148 @@ input:focus, select:focus, textarea:focus, button:focus-visible, [tabindex]:focu
   padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: .9rem; margin-bottom: 16px;
 }
 .notice.warn { border-color: var(--warn); background: var(--warn-soft); }
+
+/* ==========================================================================
+   Plan & Today — the workflow surfaces.
+   Colour carries meaning here, so every state is also carried by a word or a
+   shape: the levels read the same to someone who cannot separate red from
+   amber, or who is looking at a phone in direct sun.
+   ========================================================================== */
+
+.notice.ok { border-color: var(--ok); background: var(--ok-soft); }
+.avatar.sm { width: 40px; height: 40px; font-size: .85rem; flex: none; }
+.mt8 { margin-top: 8px; }
+.lede { color: var(--text-soft); font-size: 1.02rem; margin: -8px 0 22px; }
+
+.pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 24px; padding: 0 8px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-soft);
+  font-size: .8rem; font-weight: 700; border: 1px solid var(--border);
+}
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.badge.stage { background: var(--info-soft); color: var(--info); border-color: transparent; }
+
+/* ---------- stage track ---------- */
+.stage-track {
+  display: flex; gap: 0; margin: 4px 0 16px;
+  overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch;
+}
+.stage {
+  flex: 1 0 auto; min-width: 104px; position: relative;
+  padding: 0 6px; text-align: center;
+}
+/* the connecting rail */
+.stage::before {
+  content: ""; position: absolute; top: 7px; left: 0; right: 50%; height: 2px;
+  background: var(--border);
+}
+.stage::after {
+  content: ""; position: absolute; top: 7px; left: 50%; right: 0; height: 2px;
+  background: var(--border);
+}
+.stage:first-child::before, .stage:last-child::after { display: none; }
+.stage.done::before, .stage.done::after, .stage.now::before { background: var(--accent); }
+.stage .dot {
+  position: relative; z-index: 1; display: block; width: 16px; height: 16px;
+  margin: 0 auto 8px; border-radius: 50%;
+  background: var(--surface); border: 2px solid var(--border-strong);
+}
+.stage.done .dot { background: var(--accent); border-color: var(--accent); }
+.stage.now .dot {
+  background: var(--surface); border-color: var(--accent); border-width: 5px;
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.stage .lbl { font-size: .76rem; color: var(--text-faint); line-height: 1.3; display: block; }
+.stage.done .lbl { color: var(--text-soft); }
+.stage.now .lbl { color: var(--accent-dark); font-weight: 700; }
+.stage-desc { color: var(--text); font-size: .95rem; margin: 0 0 4px; }
+
+/* ---------- suggestions ---------- */
+.sug-group { margin-bottom: 20px; }
+.sug-group:last-child { margin-bottom: 0; }
+.sug-head {
+  display: flex; align-items: center; gap: 8px; font-size: .82rem;
+  text-transform: uppercase; letter-spacing: .06em; margin: 0 0 2px;
+}
+.sug-head .count {
+  font-size: .75rem; background: var(--surface-2); color: var(--text-soft);
+  border-radius: 999px; padding: 1px 8px; letter-spacing: 0;
+}
+.sug-head.urgent { color: var(--danger); }
+.sug-head.soon   { color: var(--warn); }
+.sug-head.ready  { color: var(--text-faint); }
+
+.sug {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-left-width: 4px;
+  border-radius: var(--radius-sm); background: var(--surface);
+}
+.sug.urgent { border-left-color: var(--danger); background: var(--danger-soft); }
+.sug.soon   { border-left-color: var(--warn); background: var(--warn-soft); }
+.sug.ready  { border-left-color: var(--border-strong); }
+.sug-body { flex: 1; min-width: 0; }
+.sug-who {
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-faint); font-weight: 700; margin-bottom: 2px;
+}
+.sug-title { font-weight: 650; font-size: .95rem; line-height: 1.35; }
+.sug-why { margin: 4px 0 0; font-size: .86rem; color: var(--text-soft); line-height: 1.45; }
+.sug .btn { flex: none; }
+
+/* ---------- milestones ---------- */
+.milestones { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+.milestone {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px; background: var(--surface-2);
+}
+.milestone.set { background: var(--ok-soft); border-color: transparent; }
+.milestone .ms-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.milestone p { margin: 0 0 10px; line-height: 1.4; }
+
+/* ---------- meters ---------- */
+.meter { margin-bottom: 18px; }
+.meter:last-child { margin-bottom: 0; }
+.meter-top { display: flex; justify-content: space-between; font-size: .9rem; font-weight: 650; margin-bottom: 6px; }
+.meter .bar { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.meter .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s ease; }
+
+/* ---------- intake readiness ---------- */
+.hmis-grid { display: grid; gap: 6px; grid-template-columns: repeat(2, minmax(0,1fr)); }
+.hmis-row {
+  display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface-2);
+  font-size: .88rem;
+}
+.hmis-row.have { background: var(--ok-soft); }
+.hmis-row .tick { color: var(--text-faint); font-weight: 700; text-align: center; }
+.hmis-row.have .tick { color: var(--ok); }
+.hmis-row .hmis-id { font-size: .72rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.hmis-row .hmis-note { grid-column: 2 / -1; }
+
+/* ---------- today rows ---------- */
+.today-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.today-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.today-row .tr-body { flex: 1; min-width: 0; }
+.today-row .tr-name {
+  background: none; border: 0; padding: 0; font: inherit; font-weight: 650;
+  color: var(--text); cursor: pointer; text-align: left; font-size: .98rem;
+}
+.today-row .tr-name:hover { color: var(--accent-dark); text-decoration: underline; }
+.today-row .tr-actions { flex: none; }
+
+@media (max-width: 720px) {
+  .milestones { grid-template-columns: 1fr; }
+  .hmis-grid { grid-template-columns: 1fr; }
+  .sug { flex-direction: column; }
+  .sug .btn { align-self: flex-start; }
+  .today-row { flex-wrap: wrap; }
+  .today-row .tr-actions { width: 100%; }
+  .today-row .tr-actions .btn { width: 100%; }
+  /* Full-size tap targets in the field: cold hands, gloves, one thumb. */
+  .sug .btn, .today-row .btn, .milestone .btn { min-height: 44px; padding: 10px 16px; font-size: .9rem; }
+}

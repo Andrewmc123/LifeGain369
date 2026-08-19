@@ -36,10 +36,14 @@ var PACKET_CSS = [
   '.packet .p-sign{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:26px;}',
   '.packet .p-sign .line{border-top:1px solid #666;padding-top:5px;font-size:11px;color:#555;margin-top:34px;}',
   '.packet .p-none{color:#888;font-style:italic;}',
+  // Must stay legible in grayscale: photocopiers and fax machines are still
+  // how a lot of housing paperwork actually moves.
+  '.packet .p-flag{margin-top:10px;padding:8px 11px;border:1px solid #999;border-left:4px solid #333;background:#f4f4f4;font-size:12.5px;}',
   '@media print{',
   '.packet{padding:0;font-size:11.5pt;}',
   '.packet h2.p-sec{break-after:avoid;page-break-after:avoid;}',
   '.packet .p-goal,.packet .p-row,.packet table.p-tbl tr{break-inside:avoid;page-break-inside:avoid;}',
   '.packet .p-head{break-inside:avoid;page-break-inside:avoid;}',
+  '.packet .p-flag{break-inside:avoid;page-break-inside:avoid;}',
   '}'
 ].join('\n');

@@ -36,7 +36,12 @@ var Store = (function () {
         orgName: '',
         orgContact: '',
         workerName: '',
+        coc: '',
         theme: 'auto',
+        // How many days of silence before a record is flagged as drifting.
+        followUpDays: 14,
+        // Set whenever a backup is exported, so the app can nag honestly.
+        lastBackupAt: '',
         confidentialityNote:
           'CONFIDENTIAL. This document contains personal information shared in ' +
           'confidence. Share only with the written consent of the person named above.'
@@ -65,6 +70,35 @@ var Store = (function () {
       email: '',
       caseNumber: '',
       languages: '',
+
+      // Where they are in the outreach journey. The stage itself is
+      // inferred from these milestones (see workflow.js); the override is
+      // there for when the record does not tell the whole story.
+      stageOverride: '',
+      engagementDate: '',   // the day they began working with you
+      assessmentDate: '',   // local coordinated-entry assessment
+      housedDate: '',       // move-in day
+      followUpDate: '',     // next planned contact
+      followUpNote: '',
+
+      // Facts a local HMIS or coordinated entry will ask for anyway. Kept
+      // so nobody has to be re-interviewed about the worst period of their
+      // life because a form was not filled in. Deliberately no SSN field:
+      // the number is a serious liability on a field device, so this only
+      // records whether it is held somewhere official.
+      hmis: {
+        clientCode: '',     // the local HMIS id, if they already have one
+        coc: '',            // Continuum of Care
+        householdType: '',
+        raceEthnicity: '',
+        gender: '',
+        ssnOnFile: '',
+        veteranAsked: '',
+        disabilityAsked: '',
+        homelessMonths: '',
+        homelessTimes: '',
+        notes: ''
+      },
 
       // Where they stay
       stay: {
@@ -169,7 +203,7 @@ var Store = (function () {
     Object.keys(base).forEach(function (k) {
       var v = p[k];
       if (v === undefined || v === null) return;
-      if (k === 'stay' || k === 'story' || k === 'consent') {
+      if (k === 'stay' || k === 'story' || k === 'consent' || k === 'hmis') {
         Object.keys(base[k]).forEach(function (sk) {
           if (v[sk] !== undefined && v[sk] !== null) base[k][sk] = v[sk];
         });
