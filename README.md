@@ -121,6 +121,30 @@ The editable contact log sits underneath, unchanged.
 
 ---
 
+## How it looks
+
+Typography uses **Segoe UI Variable** in both its optical sizes — Display for headings, Text for
+body copy — with **Cascadia Mono** for figures so numbers line up in columns. These ship with
+Windows 11 and degrade cleanly to the system stack on macOS, Android and Linux. **Nothing is
+fetched from a font CDN**, because the app still has to work with no signal, and because a font
+request is a request that leaves the device.
+
+The interface is dark-first with a teal-to-indigo accent, a soft ambient wash behind the page, a
+frosted header, and gradient page titles. Restraint was deliberate in three places:
+
+- **Contrast is measured, not eyeballed.** Every text/background pair was checked against WCAG.
+  The dark theme's accent is bright, so text sitting on it is near-black rather than white — white
+  measured 1.86:1, which is unreadable.
+- **`backdrop-filter` runs on the header only.** One element, not thirty cards, so scrolling stays
+  smooth on old hardware.
+- **Motion is off for anyone who asked for it.** `prefers-reduced-motion` disables every
+  transition and animation, and `prefers-contrast: more` flattens the decorative layers.
+
+Print is unaffected: records and street sheets come out on white paper with black text, no
+gradients, no shadows.
+
+---
+
 ## Local resources (Help → NYC resources)
 
 Forty-one New York City resources, grouped by how urgent they are: **Right now**, **A bed
@@ -224,6 +248,7 @@ index.html            the app
 Start App.bat         launcher (serves the app locally, then opens it)
 assets/
   styles.css          appearance of the app
+  refine.css          type, colour and the finish layer
   packet-style.js     appearance of the printed/emailed document
   workflow.js         stages, next steps, duplicate and priority checks
   resources-nyc.js    NYC hotlines, shelters, departments, document checklists

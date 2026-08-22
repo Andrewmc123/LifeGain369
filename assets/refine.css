@@ -1,0 +1,344 @@
+/* ==========================================================================
+   refine.css — the finish layer.
+
+   Loaded after styles.css so it can lift the base components without
+   rewriting them. Three rules held throughout:
+
+   1. Nothing decorative may cost legibility. This is read one-handed, in
+      daylight, on a cheap phone, by someone who is cold. Contrast, tap
+      targets and focus visibility survive every effect here.
+
+   2. Motion is a courtesy, not a personality. Everything is short, and all
+      of it is switched off under prefers-reduced-motion.
+
+   3. Expensive effects are rationed. backdrop-filter runs on the header
+      only — one element, not thirty cards — so scrolling stays smooth on
+      old hardware.
+   ========================================================================== */
+
+/* ---------- ambient depth -------------------------------------------------
+   A fixed, very soft two-colour wash behind everything. It gives the page
+   somewhere to sit without putting texture behind text.
+   ------------------------------------------------------------------------ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20vh -10vw;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46vw 42vh at 12% -6%, var(--bg-tint-a), transparent 62%),
+    radial-gradient(42vw 40vh at 92% 4%, var(--bg-tint-b), transparent 60%);
+}
+
+body {
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+/* ---------- type ---------------------------------------------------------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -.022em;
+  font-weight: 640;
+}
+h1 {
+  font-size: clamp(1.65rem, 1.35rem + 1.1vw, 2.05rem);
+  letter-spacing: -.032em;
+  line-height: 1.14;
+  text-wrap: balance;
+}
+h2 { font-size: 1.22rem; letter-spacing: -.025em; }
+
+/* The one flourish: the page title carries the accent gradient. Falls back
+   to a solid colour anywhere background-clip:text is unsupported. */
+.page-head h1,
+#view > h1 {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  width: fit-content;
+  max-width: 100%;
+  padding-bottom: .06em;
+}
+@supports not (background-clip: text) {
+  .page-head h1, #view > h1 { color: var(--text); -webkit-text-fill-color: currentColor; }
+}
+
+.lede { text-wrap: pretty; }
+.section-hint { text-wrap: pretty; }
+
+/* Numbers read as data, not prose. */
+.stat .n, .chart-n, .tl-date, .res-tel, .meter-top span:last-child, .pill {
+  font-variant-numeric: tabular-nums;
+}
+.stat .n { font-family: var(--font-mono); letter-spacing: -.03em; }
+
+/* ---------- app shell ----------------------------------------------------- */
+.topbar {
+  background: var(--surface-glass);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--hairline) inset;
+}
+@supports (backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px)) {
+  .topbar {
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+  }
+}
+
+.brand .mark {
+  background: var(--grad);
+  box-shadow: 0 4px 14px -4px var(--accent);
+  border-radius: 11px;
+}
+.brand .name { font-family: var(--font-display); letter-spacing: -.03em; }
+
+.nav button { transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.nav button.active {
+  background: var(--accent-soft);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ---------- cards --------------------------------------------------------- */
+.card {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 1px 0 var(--hairline) inset;
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+/* ---------- buttons ------------------------------------------------------- */
+.btn {
+  transition: transform .12s var(--ease), box-shadow var(--dur) var(--ease),
+              background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn.primary {
+  background: var(--grad);
+  border-color: transparent;
+  box-shadow: 0 6px 18px -8px var(--accent), 0 1px 0 rgba(255,255,255,.22) inset;
+}
+.btn.primary:hover {
+  box-shadow: 0 10px 26px -8px var(--accent), 0 1px 0 rgba(255,255,255,.28) inset;
+  filter: saturate(112%);
+}
+.btn:focus-visible,
+.nav button:focus-visible,
+.tabs button:focus-visible,
+.help-nav button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   The part people actually spend their time in: filling this in.
+
+   Someone is sitting opposite a worker giving painful information, and the
+   worker is typing it. The form should feel calm and responsive rather than
+   like a database being filled in about them.
+   ========================================================================== */
+
+input[type="text"], input[type="date"], input[type="number"], input[type="tel"],
+input[type="email"], input[type="search"], textarea, select {
+  font-family: var(--font);
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  caret-color: var(--accent);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+              background var(--dur) var(--ease);
+}
+textarea { line-height: 1.6; }
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+/* Hovering tells you it is editable before you commit to tapping it. */
+input:hover:not(:focus), textarea:hover:not(:focus), select:hover:not(:focus) {
+  border-color: var(--accent);
+}
+
+/* Focus: a clear ring plus a soft glow. Two signals, so it still reads for
+   anyone who cannot pick the accent colour out. */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--glow);
+  background: var(--surface);
+}
+
+/* The label lights up with its field, so the eye never loses which box is
+   live halfway down a long form. */
+.field:focus-within > label,
+.field:focus-within > .field-label {
+  color: var(--accent-dark);
+}
+.field > label, .field-label {
+  transition: color var(--dur) var(--ease);
+}
+
+/* Checkboxes and the chip pickers get the same treatment. */
+.checkline { border-radius: var(--radius-sm); transition: background var(--dur) var(--ease); }
+.checkline:hover { background: var(--surface-2); }
+.checkline input[type=checkbox] { accent-color: var(--accent); }
+
+.chip, .chipgroup button, [data-action="chip"] {
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+              transform .12s var(--ease), box-shadow var(--dur) var(--ease);
+}
+[data-action="chip"]:hover { transform: translateY(-1px); }
+[data-action="chip"][aria-pressed="true"] {
+  box-shadow: 0 4px 12px -6px var(--accent);
+}
+
+/* The autosave dot: a quiet, living confirmation that the work is kept.
+   This is the only thing on screen that moves on its own. */
+#save-dot { transition: color var(--dur) var(--ease); }
+#save-dot::before {
+  content: "";
+  display: inline-block;
+  width: 7px; height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 0 var(--ok);
+  vertical-align: baseline;
+  animation: savePulse 2.6s var(--ease) infinite;
+}
+@keyframes savePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(110, 231, 160, .45); }
+  60%  { box-shadow: 0 0 0 7px rgba(110, 231, 160, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(110, 231, 160, 0); }
+}
+
+/* ---------- content components ------------------------------------------- */
+.stage.now .dot { box-shadow: 0 0 0 4px var(--accent-soft), 0 0 16px -2px var(--accent); }
+.chart-track i, .meter .bar i { background: var(--grad); }
+.spark-line { stroke: var(--accent); filter: drop-shadow(0 2px 6px var(--accent-soft)); }
+
+.sug { transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.sug:hover { transform: translateX(2px); box-shadow: var(--shadow); }
+
+.today-row { transition: background var(--dur) var(--ease); border-radius: var(--radius-sm); }
+.today-row:hover { background: var(--surface-2); }
+
+.avatar { box-shadow: 0 0 0 1px var(--border), var(--shadow); }
+.badge, .pill { letter-spacing: .01em; }
+
+.timeline .tl-dot { transition: transform var(--dur) var(--ease); }
+.timeline .tl:hover .tl-dot { transform: scale(1.12); }
+
+.res-tel { font-family: var(--font-mono); font-weight: 600; letter-spacing: -.02em; }
+
+/* New content fades in rather than snapping, which makes navigation feel
+   settled instead of abrupt. */
+#view > * { animation: rise .32s var(--ease) both; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- respect the setting ------------------------------------------
+   Anyone who has asked their device for less motion gets none of it. This
+   also covers people for whom movement triggers nausea or migraine.
+   ------------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  #view > * { animation: none; opacity: 1; transform: none; }
+  .btn:hover, .sug:hover, .timeline .tl:hover .tl-dot { transform: none; }
+}
+
+/* Anyone who has asked for more contrast gets flat, high-contrast surfaces. */
+@media (prefers-contrast: more) {
+  body::before { display: none; }
+  .card, .topbar { background: var(--surface); border: 1px solid var(--text-soft); }
+  .page-head h1, #view > h1 { color: var(--text); -webkit-text-fill-color: currentColor; }
+  input:focus, textarea:focus, select:focus { box-shadow: 0 0 0 3px var(--text); }
+}
+
+/* ---------- paper --------------------------------------------------------
+   None of the above belongs on a printed record or a street sheet.
+   ------------------------------------------------------------------------ */
+@media print {
+  body::before { display: none !important; }
+  #view > * { animation: none !important; }
+  #save-dot::before { display: none !important; }
+  .page-head h1, #view > h1 {
+    background: none !important;
+    color: #000 !important;
+    -webkit-text-fill-color: #000 !important;
+  }
+  .card { box-shadow: none !important; }
+  .chart-track i, .meter .bar i { background: #555 !important; }
+}
+
+/* ---------- text on top of the accent -------------------------------------
+   The dark theme's accent is deliberately bright, so white text on it fails
+   badly (measured at 1.86:1 before this). Anything sitting on the accent or
+   the gradient uses --on-accent instead, which flips to near-black in dark
+   and stays white in light.
+   ------------------------------------------------------------------------ */
+.btn.primary,
+.btn.primary:hover,
+.help-nav button.active {
+  color: var(--on-accent);
+}
+.brand .mark { color: var(--on-accent); }
+::selection { background: var(--accent); color: var(--on-accent); }
+
+/* Links need to clear 4.5:1 as body-size text, which the plain accent does
+   not manage on a white card in the light theme. */
+a { color: var(--accent-dark); }
+a:hover { color: var(--accent); }
+.res-line a { color: var(--info); }
+
+/* ---------- overflow containment ------------------------------------------
+   Grid and flex items default to min-width:auto, which means a long name or
+   a long location string can push the whole page sideways instead of
+   wrapping. Measured at 375px: the People list was forcing the document to
+   810px and the Documentation tab to 459px. Both are pre-existing; both
+   matter most on the cheap phone this is used from.
+   ------------------------------------------------------------------------ */
+.grid > *,
+.person-list > *,
+.doc-layout > *,
+.milestones > *,
+.hmis-grid > * { min-width: 0; }
+
+.person-card,
+.doc-side,
+.doc-side .sticky { min-width: 0; max-width: 100%; }
+
+/* Long unbroken strings — an email, a URL, a run-on location — wrap rather
+   than stretch their container. */
+.person-card .who,
+.person-card .nm,
+.person-card .sub,
+.tr-body,
+.sug-body,
+.res-item,
+.tl-body { min-width: 0; overflow-wrap: anywhere; }
+
+/* Last line of defence: nothing may make the document itself scroll
+   sideways. Anything genuinely wide gets its own scroller instead. */
+html, body { max-width: 100%; overflow-x: clip; }
+@supports not (overflow-x: clip) {
+  html, body { overflow-x: hidden; }
+}

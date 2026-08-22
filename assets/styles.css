@@ -4,72 +4,127 @@
    ========================================================================== */
 
 :root {
-  --bg: #f6f4f0;
+  /* ---- Type ------------------------------------------------------------
+     Segoe UI Variable ships with Windows 11 in two optical sizes: Display
+     for headings, Text for body copy at small sizes. Using both is what
+     makes the interface read as designed rather than defaulted. Every stack
+     degrades cleanly on macOS, Android and Linux, and nothing is fetched
+     from the internet — the app still has to work with no signal.
+     -------------------------------------------------------------------- */
+  --font: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont,
+          "SF Pro Text", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Semibold", -apple-system,
+          BlinkMacSystemFont, "SF Pro Display", system-ui, Roboto, "Helvetica Neue",
+          Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, "SF Mono",
+          Consolas, "Roboto Mono", monospace;
+
+  --fs-xs: .765rem;
+  --fs-sm: .875rem;
+  --fs-md: .945rem;
+  --fs-lg: 1.08rem;
+
+  /* ---- Light: built for a phone screen in daylight --------------------- */
+  --bg: #eef1f7;
+  --bg-tint-a: rgba(56, 189, 168, .16);
+  --bg-tint-b: rgba(108, 124, 255, .14);
   --surface: #ffffff;
-  --surface-2: #f1eee9;
-  --border: #ddd6cc;
-  --border-strong: #c4bab0;
-  --text: #241f1a;
-  --text-soft: #5f574e;
-  --text-faint: #8b8178;
+  --surface-2: #eef1f6;
+  --surface-glass: rgba(255, 255, 255, .78);
+  --border: #dde2ec;
+  --border-strong: #b9c2d2;
+  --hairline: rgba(255, 255, 255, .9);
 
-  --accent: #1f6f5c;
-  --accent-dark: #175446;
-  --accent-soft: #e3f0ec;
+  --text: #10151f;
+  --text-soft: #4a5568;
+  --text-faint: #78829a;
 
-  --warn: #a8620d;
-  --warn-soft: #fbeedd;
-  --danger: #a32d29;
-  --danger-soft: #fbe7e6;
-  --ok: #2b6b3f;
-  --ok-soft: #e4f1e8;
-  --info: #2c5a8f;
-  --info-soft: #e5eefa;
+  --accent: #0a7a68;
+  --accent-dark: #065f52;
+  --accent-soft: #dcf3ee;
+  --accent-2: #4a55c4;
+  --grad: linear-gradient(118deg, #0a7a68 0%, #256aa8 52%, #4a55c4 100%);
+  /* Text that sits on top of the accent or the gradient. */
+  --on-accent: #ffffff;
+  --grad-soft: linear-gradient(118deg, rgba(13,143,122,.13), rgba(79,95,216,.13));
+  --glow: 0 0 0 4px rgba(13, 143, 122, .16);
 
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 2px rgba(36, 31, 26, .06), 0 6px 18px rgba(36, 31, 26, .07);
-  --shadow-lg: 0 10px 40px rgba(36, 31, 26, .18);
-  --font: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  --warn: #9a5a06; --warn-soft: #fdf0dc;
+  --danger: #9d2a26; --danger-soft: #fce8e7;
+  --ok: #1e6b3c; --ok-soft: #dff2e6;
+  --info: #23548c; --info-soft: #e2edfb;
+
+  --radius: 16px;
+  --radius-sm: 11px;
+  --shadow: 0 1px 2px rgba(16, 21, 31, .05), 0 8px 24px rgba(16, 21, 31, .07);
+  --shadow-lg: 0 18px 50px rgba(16, 21, 31, .18);
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --dur: .22s;
 }
 
+/* ---- Dark: the default on most phones, and the one that should feel
+        like something you want to look at ---------------------------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #16130f;
-    --surface: #211d18;
-    --surface-2: #2a251f;
-    --border: #3a332b;
-    --border-strong: #4d453b;
-    --text: #f2ede6;
-    --text-soft: #bdb3a7;
-    --text-faint: #8d8377;
-    --accent: #4fbb9d;
-    --accent-dark: #6fd0b4;
-    --accent-soft: #1d3a33;
-    --warn: #e0a256;
-    --warn-soft: #3a2c17;
-    --danger: #ef8b86;
-    --danger-soft: #3b1f1e;
-    --ok: #79c98f;
-    --ok-soft: #1c3324;
-    --info: #8db6e8;
-    --info-soft: #1c2a3d;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
-    --shadow-lg: 0 10px 40px rgba(0,0,0,.6);
+    --bg: #080a10;
+    --bg-tint-a: rgba(45, 212, 191, .13);
+    --bg-tint-b: rgba(129, 140, 248, .12);
+    --surface: #12151d;
+    --surface-2: #1a1f2a;
+    --surface-glass: rgba(18, 21, 29, .72);
+    --border: #232936;
+    --border-strong: #384153;
+    --hairline: rgba(255, 255, 255, .06);
+
+    --text: #eef2f8;
+    --text-soft: #a9b4c6;
+    --text-faint: #7a8699;
+
+    --accent: #2dd4bf;
+    --accent-dark: #5eead4;
+    --accent-soft: #0c2d2a;
+    --accent-2: #818cf8;
+    --on-accent: #04231f;
+    --grad: linear-gradient(118deg, #2dd4bf 0%, #58b0f0 52%, #818cf8 100%);
+    --grad-soft: linear-gradient(118deg, rgba(45,212,191,.16), rgba(129,140,248,.16));
+    --glow: 0 0 0 4px rgba(45, 212, 191, .22);
+
+    --warn: #f0b968; --warn-soft: #2e2412;
+    --danger: #fb9490; --danger-soft: #2f1a19;
+    --ok: #6ee7a0; --ok-soft: #102a1c;
+    --info: #93c5fd; --info-soft: #142334;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,.65);
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #16130f; --surface: #211d18; --surface-2: #2a251f;
-  --border: #3a332b; --border-strong: #4d453b;
-  --text: #f2ede6; --text-soft: #bdb3a7; --text-faint: #8d8377;
-  --accent: #4fbb9d; --accent-dark: #6fd0b4; --accent-soft: #1d3a33;
-  --warn: #e0a256; --warn-soft: #3a2c17;
-  --danger: #ef8b86; --danger-soft: #3b1f1e;
-  --ok: #79c98f; --ok-soft: #1c3324;
-  --info: #8db6e8; --info-soft: #1c2a3d;
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.35);
-  --shadow-lg: 0 10px 40px rgba(0,0,0,.6);
+  --bg: #080a10;
+  --bg-tint-a: rgba(45, 212, 191, .13);
+  --bg-tint-b: rgba(129, 140, 248, .12);
+  --surface: #12151d;
+  --surface-2: #1a1f2a;
+  --surface-glass: rgba(18, 21, 29, .72);
+  --border: #232936;
+  --border-strong: #384153;
+  --hairline: rgba(255, 255, 255, .06);
+  --text: #eef2f8;
+  --text-soft: #a9b4c6;
+  --text-faint: #7a8699;
+  --accent: #2dd4bf;
+  --accent-dark: #5eead4;
+  --accent-soft: #0c2d2a;
+  --accent-2: #818cf8;
+  --on-accent: #04231f;
+  --grad: linear-gradient(118deg, #2dd4bf 0%, #58b0f0 52%, #818cf8 100%);
+  --grad-soft: linear-gradient(118deg, rgba(45,212,191,.16), rgba(129,140,248,.16));
+  --glow: 0 0 0 4px rgba(45, 212, 191, .22);
+  --warn: #f0b968; --warn-soft: #2e2412;
+  --danger: #fb9490; --danger-soft: #2f1a19;
+  --ok: #6ee7a0; --ok-soft: #102a1c;
+  --info: #93c5fd; --info-soft: #142334;
+  --shadow: 0 1px 2px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.45);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,.65);
 }
 
 * { box-sizing: border-box; }
