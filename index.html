@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="A private, offline record keeper for street outreach: where someone stays, what they are working toward, their story, and documents you can print or email.">
 <meta name="color-scheme" content="light dark">
-<title>Outreach Companion</title>
-<link rel="stylesheet" href="assets/styles.css?v=11">
-<link rel="stylesheet" href="assets/refine.css?v=11">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231f6f5c'/><text y='72' x='50' text-anchor='middle' font-size='58'>🏠</text></svg>">
+<meta name="theme-color" content="#0a7a68">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<title>LifeGain369</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+<link rel="stylesheet" href="assets/css/refine.css">
+<link rel="stylesheet" href="assets/css/features.css">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 </head>
 <body>
 
@@ -18,7 +22,7 @@
     <div class="brand">
       <div class="mark" aria-hidden="true">🏠</div>
       <div>
-        <span class="name">Outreach Companion</span>
+        <span class="name">LifeGain369</span>
         <span class="org" id="brand-org">Local records · nothing is uploaded</span>
       </div>
     </div>
@@ -32,6 +36,7 @@
       <button data-action="nav" data-view="settings">Settings</button>
       <button data-action="nav" data-view="help">Help</button>
     </nav>
+    <button class="btn sm ghost lock-btn" id="lock-now" data-action="lock-now" hidden title="Lock the app now">🔒 Lock</button>
   </header>
 
   <main class="main" id="view">
@@ -53,12 +58,33 @@
   </div>
 </noscript>
 
-<script src="assets/packet-style.js?v=11"></script>
-<script src="assets/storage.js?v=11"></script>
-<script src="assets/workflow.js?v=11"></script>
-<script src="assets/resources-nyc.js?v=11"></script>
-<script src="assets/sample-data.js?v=11"></script>
-<script src="assets/doc.js?v=11"></script>
-<script src="assets/app.js?v=11"></script>
+<!-- Plain scripts, not modules, so the app still opens straight from a file.
+     Order matters: core, then data, then the UI that uses them. -->
+<script src="assets/core/util.js"></script>
+<script src="assets/core/config.js"></script>
+<script src="assets/core/crypto.js"></script>
+<script src="assets/core/store.js"></script>
+<script src="assets/core/flow.js"></script>
+<script src="assets/core/doc.js"></script>
+<script src="assets/core/report.js"></script>
+<script src="assets/data/catalogs.js"></script>
+<script src="assets/data/resources-nyc.js"></script>
+<script src="assets/data/sample-data.js"></script>
+<script src="assets/ui/packet-style.js"></script>
+<script src="assets/ui/ui.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/views/lock.js"></script>
+<script src="assets/views/overview.js"></script>
+<script src="assets/views/today.js"></script>
+<script src="assets/views/people.js"></script>
+<script src="assets/views/person.js"></script>
+<script src="assets/views/plan.js"></script>
+<script src="assets/views/history.js"></script>
+<script src="assets/views/documentation.js"></script>
+<script src="assets/views/report.js"></script>
+<script src="assets/views/settings.js"></script>
+<script src="assets/views/help.js"></script>
+<script src="assets/actions.js"></script>
+<script src="assets/main.js"></script>
 </body>
 </html>

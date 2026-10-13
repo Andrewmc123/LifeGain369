@@ -15,6 +15,7 @@ var PACKET_CSS = [
   '.packet .p-head .p-id{flex:1;}',
   '.packet .p-head h1{font-size:24px;margin:0 0 4px;color:#17544e;line-height:1.2;}',
   '.packet .p-head .p-meta{font-size:13px;color:#555;}',
+  '.packet .p-logo{max-width:150px;max-height:54px;object-fit:contain;margin-bottom:4px;}',
   '.packet .p-org{text-align:right;font-size:11px;color:#666;flex:none;max-width:190px;line-height:1.45;}',
   '.packet h2.p-sec{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:#1f6f5c;',
   'border-bottom:1px solid #d8d2c8;padding-bottom:5px;margin:22px 0 10px;}',

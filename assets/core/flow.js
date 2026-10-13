@@ -1,5 +1,5 @@
 /* ==========================================================================
-   workflow.js — the part of the app that thinks.
+   flow.js — the part of the app that thinks.
 
    Everything here is a pure read over a record: give it a person, get back
    what stage they are at, what is worth doing next, and what is missing.
@@ -42,7 +42,7 @@ var Flow = (function () {
 
   // Documents that most housing and benefit applications will not move
   // without. Used to decide whether someone has reached "Papers in hand".
-  var CORE_DOCS = ['State ID', 'Driver', 'Social Security', 'Birth Certificate'];
+  var CORE_DOCS = ['State ID', 'Driver', 'IDNYC', 'Social Security', 'Birth Certificate'];
 
   function stageIndex(k) {
     for (var i = 0; i < STAGES.length; i++) if (STAGES[i].k === k) return i;
@@ -53,7 +53,8 @@ var Flow = (function () {
 
   /* ----- small date helpers ------------------------------------------- */
 
-  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  // Always the worker's local date — see util.js.
+  function todayStr() { return Util.todayStr(); }
 
   function daysBetween(a, b) {
     if (!a || !b) return null;
@@ -441,7 +442,7 @@ var Flow = (function () {
 
     // Data safety: local-only storage is private but it is also fragile.
     var backupWarning = null;
-    var lastBackup = s.lastBackupAt ? s.lastBackupAt.slice(0, 10) : '';
+    var lastBackup = Util.dateOf(s.lastBackupAt);
     var bAge = lastBackup ? daysAgo(lastBackup) : null;
     if (people.length && (bAge === null || bAge > 7)) {
       backupWarning = bAge === null
@@ -505,6 +506,10 @@ var Flow = (function () {
     duplicatesOf: duplicatesOf,
     shift: shift,
     hmisReadiness: hmisReadiness,
+    activeGoals: activeGoals,
+    openReferrals: openReferrals,
+    isFilled: isFilled,
+    daysBetween: daysBetween,
     lastContactDate: lastContactDate,
     daysSinceContact: daysSinceContact,
     coreDocsHeld: coreDocsHeld,

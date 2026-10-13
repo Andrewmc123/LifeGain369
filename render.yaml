@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-#  Render Blueprint — Outreach Companion
+#  Render Blueprint — LifeGain369
 #
 #  Publishes the app as a static site. There is no backend and no database on
 #  purpose: records never leave the worker's browser, so there is no server
@@ -11,7 +11,7 @@
 
 services:
   - type: web
-    name: outreach-companion
+    name: lifegain369
     runtime: static
 
     # Nothing to compile — the app is plain HTML, CSS and JavaScript.
@@ -22,7 +22,7 @@ services:
 
     headers:
       # The app loads nothing from the internet, so it can be locked down
-      # tightly. 'unsafe-inline' is needed for style= attributes in the
+      # tightly. 'self' also covers the service worker and the manifest. 'unsafe-inline' is needed for style= attributes in the
       # printable document; there are no inline <script> blocks.
       - path: /*
         name: Content-Security-Policy
@@ -63,8 +63,11 @@ services:
         name: Strict-Transport-Security
         value: max-age=31536000; includeSubDomains
 
-      # The app is updated by redeploying; keep code fresh but let the
-      # browser cache it between visits.
-      - path: /assets/*
+      # The app is updated by redeploying. "no-cache" still lets the browser
+      # keep a copy, but it checks with the server (a cheap ETag request)
+      # before using it — so a redeploy reaches everyone on their next visit,
+      # with no ?v= numbers to bump by hand. Offline, the service worker
+      # (sw.js) serves the last copy instead.
+      - path: /*
         name: Cache-Control
-        value: public, max-age=3600, must-revalidate
+        value: no-cache
