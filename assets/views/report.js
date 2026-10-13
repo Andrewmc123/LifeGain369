@@ -104,7 +104,7 @@
 
   function downloadCSV() {
     var r = current();
-    UI.download('outreach-report-' + r.from + '-to-' + r.to + '.csv', UI.toCSV(Report.csv(r)), 'text/csv');
+    UI.download('lifegain369-report-' + r.from + '-to-' + r.to + '.csv', UI.toCSV(Report.csv(r)), 'text/csv');
     UI.toast('Report downloaded.');
   }
 

@@ -1,4 +1,4 @@
-# Outreach Companion — user guide
+# LifeGain369 — user guide
 
 ## Using it in the field
 

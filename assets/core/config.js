@@ -8,7 +8,7 @@
    ========================================================================== */
 
 var APP_CONFIG = {
-  productName: 'Outreach Companion',
+  productName: 'LifeGain369',
   version: '2.0.0',
 
   // Where an organisation reaches you about the paid plans. A mailto link is

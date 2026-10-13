@@ -332,7 +332,7 @@ var Actions = (function () {
   function backup() {
     Store.backupPayload().then(function (body) {
       var stamp = Util.todayStr();
-      UI.download('outreach-backup-' + stamp + '.json', JSON.stringify(body, null, 2), 'application/json');
+      UI.download('lifegain369-backup-' + stamp + '.json', JSON.stringify(body, null, 2), 'application/json');
       // Stamped after the download so the reminder on Today is truthful.
       Store.settings().lastBackupAt = new Date().toISOString();
       Store.save();
@@ -418,7 +418,7 @@ var Actions = (function () {
       ]);
     });
 
-    UI.download('outreach-people-' + Util.todayStr() + '.csv', UI.toCSV(rows), 'text/csv');
+    UI.download('lifegain369-people-' + Util.todayStr() + '.csv', UI.toCSV(rows), 'text/csv');
     toast('CSV downloaded.');
   }
 

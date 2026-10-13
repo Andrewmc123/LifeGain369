@@ -1,4 +1,4 @@
-# Outreach Companion
+# LifeGain369
 
 A private, offline record keeper for street outreach. For each person you meet it holds where
 they stay, what they are working toward, their story in their own words, a photo (with

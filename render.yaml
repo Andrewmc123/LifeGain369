@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-#  Render Blueprint — Outreach Companion
+#  Render Blueprint — LifeGain369
 #
 #  Publishes the app as a static site. There is no backend and no database on
 #  purpose: records never leave the worker's browser, so there is no server
@@ -11,7 +11,7 @@
 
 services:
   - type: web
-    name: outreach-companion
+    name: lifegain369
     runtime: static
 
     # Nothing to compile — the app is plain HTML, CSS and JavaScript.

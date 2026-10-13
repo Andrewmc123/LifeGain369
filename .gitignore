@@ -5,6 +5,9 @@
 # ---------------------------------------------------------------
 outreach-backup-*.json
 outreach-people-*.csv
+lifegain369-backup-*.json
+lifegain369-people-*.csv
+lifegain369-report-*.csv
 *-record.html
 *-record.txt
 backups/
