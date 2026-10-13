@@ -1,5 +1,5 @@
 /* ==========================================================================
-   storage.js — local-only persistence.
+   store.js — local-only persistence.
 
    Nothing leaves the device. Data is kept in IndexedDB when the browser
    allows it, and falls back to localStorage automatically (which matters
@@ -9,6 +9,9 @@
    single debounced blob. That keeps the code small and makes backup/restore
    a one-liner, which is the right trade at the scale this app is built for
    (an outreach team with tens to a few hundred records).
+
+   With a passcode set (see crypto.js) the blob is encrypted before it is
+   written, and the app starts locked until the passcode is entered.
    ========================================================================== */
 
 var Store = (function () {
@@ -20,26 +23,42 @@ var Store = (function () {
   var KEY = 'database';
   var LS_KEY = 'outreach-companion-db';
 
+  var DEFAULT_DOCUMENTS = [
+    'State ID or Driver’s License',
+    'Social Security Card',
+    'Birth Certificate',
+    'Proof of Income / Benefit Letter',
+    'Medical Insurance Card',
+    'Housing Application'
+  ];
+
   var db = null;          // IndexedDB handle, when available
   var backend = 'memory'; // 'idb' | 'localstorage' | 'memory'
-  var data = null;        // the in-memory database
+  var data = null;        // the in-memory database (null while locked)
+  var bundle = null;      // encryption key bundle, when a passcode is set
+  var envelope = null;    // the encrypted blob, while locked
   var saveTimer = null;
+  var pending = null;     // { promise, resolve, reject } shared by queued saves
   var listeners = [];
+  var errorListeners = [];
 
   /* ----- schema ------------------------------------------------------- */
 
   function blankDatabase() {
     return {
-      schema: 1,
+      schema: 2,
       createdAt: new Date().toISOString(),
       settings: {
         orgName: '',
         orgContact: '',
+        orgLogo: '',          // small data URL, printed on documents
         workerName: '',
         coc: '',
         theme: 'auto',
         // How many days of silence before a record is flagged as drifting.
         followUpDays: 14,
+        // Minutes of inactivity before a passcode-protected app locks itself.
+        lockMinutes: 10,
         // Set whenever a backup is exported, so the app can nag honestly.
         lastBackupAt: '',
         confidentialityNote:
@@ -75,7 +94,7 @@ var Store = (function () {
       languages: '',
 
       // Where they are in the outreach journey. The stage itself is
-      // inferred from these milestones (see workflow.js); the override is
+      // inferred from these milestones (see flow.js); the override is
       // there for when the record does not tell the whole story.
       stageOverride: '',
       engagementDate: '',   // the day they began working with you
@@ -96,7 +115,7 @@ var Store = (function () {
         raceEthnicity: '',
         gender: '',
         ssnOnFile: '',
-        veteranAsked: '',
+        veteranAsked: '',   // 'Yes' | 'No' | 'Does not know' | 'Prefers not to say'
         disabilityAsked: '',
         homelessMonths: '',
         homelessTimes: '',
@@ -177,54 +196,92 @@ var Store = (function () {
     return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
   }
 
-  /* ----- migration ---------------------------------------------------- */
+  /* ----- migration and sanitising ---------------------------------------
+     Fills in anything a record is missing so older or partial data never
+     breaks a screen, and coerces every value to the type the screens
+     expect. Runs on load and on import — an imported backup may have been
+     edited by hand, damaged in transit, or written by someone hostile.
+     ------------------------------------------------------------------- */
 
-  // Fills in anything a record is missing so older or partial data never
-  // breaks a screen. Runs on load and on import.
+  var NESTED = ['stay', 'story', 'consent', 'hmis'];
+  var ROW_LISTS = ['goals', 'documents', 'log', 'referrals'];
+  var STRING_LISTS = ['needs', 'barriers', 'benefits', 'tags'];
+
+  // Keep a value only if it has the same basic type as the blank default.
+  function coerce(def, v) {
+    if (typeof def === 'boolean') return v === true || v === 'true';
+    if (typeof def === 'number') { var n = Number(v); return isNaN(n) ? def : n; }
+    if (typeof def === 'string') return (typeof v === 'string' || typeof v === 'number') ? String(v) : def;
+    return def;
+  }
+
+  function cleanRow(row) {
+    var out = {};
+    Object.keys(row).forEach(function (k) {
+      var v = row[k];
+      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') out[k] = String(v);
+    });
+    out.id = Util.safeId(row.id) ? row.id : uid();
+    return out;
+  }
+
   function normalize(loaded) {
     var base = blankDatabase();
     if (!loaded || typeof loaded !== 'object') return base;
 
     var out = base;
-    out.createdAt = loaded.createdAt || base.createdAt;
-    if (loaded.settings) {
+    out.createdAt = typeof loaded.createdAt === 'string' ? loaded.createdAt : base.createdAt;
+    if (loaded.settings && typeof loaded.settings === 'object') {
       for (var k in base.settings) {
         if (Object.prototype.hasOwnProperty.call(loaded.settings, k) &&
             loaded.settings[k] !== undefined && loaded.settings[k] !== null) {
-          out.settings[k] = loaded.settings[k];
+          out.settings[k] = coerce(base.settings[k], loaded.settings[k]);
         }
       }
     }
-    out.people = (loaded.people || []).map(normalizePerson);
+    out.settings.orgLogo = Util.safeImage(out.settings.orgLogo);
+    if (['auto', 'light', 'dark'].indexOf(out.settings.theme) === -1) out.settings.theme = 'auto';
+
+    var seen = {};
+    out.people = (Array.isArray(loaded.people) ? loaded.people : [])
+      .filter(function (p) { return p && typeof p === 'object'; })
+      .map(normalizePerson)
+      .filter(function (p) {          // a backup with the same id twice keeps the first
+        if (seen[p.id]) return false;
+        seen[p.id] = true;
+        return true;
+      });
     return out;
   }
 
   function normalizePerson(p) {
     var base = blankPerson();
     if (!p || typeof p !== 'object') return base;
+    var freshId = base.id;
 
     Object.keys(base).forEach(function (k) {
       var v = p[k];
       if (v === undefined || v === null) return;
-      if (k === 'stay' || k === 'story' || k === 'consent' || k === 'hmis') {
+      if (NESTED.indexOf(k) !== -1) {
+        if (typeof v !== 'object') return;
         Object.keys(base[k]).forEach(function (sk) {
-          if (v[sk] !== undefined && v[sk] !== null) base[k][sk] = v[sk];
+          if (v[sk] !== undefined && v[sk] !== null) base[k][sk] = coerce(base[k][sk], v[sk]);
         });
-      } else if (Array.isArray(base[k])) {
-        base[k] = Array.isArray(v) ? v.slice() : base[k];
+      } else if (ROW_LISTS.indexOf(k) !== -1) {
+        base[k] = Array.isArray(v)
+          ? v.filter(function (r) { return r && typeof r === 'object'; }).map(cleanRow)
+          : [];
+      } else if (STRING_LISTS.indexOf(k) !== -1) {
+        base[k] = Array.isArray(v)
+          ? v.filter(function (s) { return typeof s === 'string'; })
+          : [];
       } else {
-        base[k] = v;
+        base[k] = coerce(base[k], v);
       }
     });
 
-    base.id = p.id || base.id;
-    // Repeating rows need stable ids for editing.
-    ['goals', 'documents', 'log', 'referrals'].forEach(function (list) {
-      base[list] = base[list].map(function (row) {
-        if (row && !row.id) row.id = uid();
-        return row;
-      });
-    });
+    base.id = Util.safeId(p.id) ? p.id : freshId;
+    base.photo = Util.safeImage(base.photo);
     return base;
   }
 
@@ -279,8 +336,34 @@ var Store = (function () {
     });
   }
 
-  /* ----- public API --------------------------------------------------- */
+  function readLocal() {
+    try {
+      var raw = window.localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
 
+  function writeLocal(payload) {
+    return new Promise(function (resolve, reject) {
+      try {
+        window.localStorage.setItem(LS_KEY, JSON.stringify(payload));
+        resolve();
+      } catch (e) {
+        backend = 'memory';
+        reject(new Error(
+          'This browser ran out of local storage space. Your work is still on ' +
+          'screen but was not saved. Use Settings to back up now, then remove ' +
+          'some photos.'
+        ));
+      }
+    });
+  }
+
+  /* ----- load ----------------------------------------------------------- */
+
+  // Resolves with { locked: boolean }.
   function init() {
     return openIDB()
       .then(function (handle) {
@@ -291,86 +374,160 @@ var Store = (function () {
       .catch(function () {
         backend = 'localstorage';
         try {
-          var raw = window.localStorage.getItem(LS_KEY);
-          return raw ? JSON.parse(raw) : null;
+          window.localStorage.getItem(LS_KEY);
         } catch (e) {
           backend = 'memory';
-          return null;
         }
+        return null;
       })
       .then(function (loaded) {
-        // A record written under IndexedDB on a previous run, or a
-        // localStorage copy left by an earlier session — take whichever exists.
-        if (!loaded && backend === 'idb') {
-          try {
-            var raw = window.localStorage.getItem(LS_KEY);
-            if (raw) loaded = JSON.parse(raw);
-          } catch (e) { /* ignore */ }
-        }
-        data = normalize(loaded);
-        return data;
+        // A copy left in localStorage by an earlier session (or by the
+        // file:// fallback) — take it if IndexedDB has nothing.
+        if (!loaded) loaded = readLocal();
+        return accept(loaded);
       })
       .catch(function () {
         backend = 'memory';
         data = blankDatabase();
-        return data;
+        return { locked: false };
       });
+  }
+
+  function accept(loaded) {
+    if (Crypt.isEnvelope(loaded)) {
+      envelope = loaded;
+      data = null;
+      return { locked: true };
+    }
+    data = normalize(loaded);
+    return { locked: false };
+  }
+
+  /* ----- save ----------------------------------------------------------- */
+
+  function payload() {
+    return bundle ? Crypt.seal(bundle, data) : Promise.resolve(data);
   }
 
   function persist() {
-    var payload = JSON.stringify(data);
-    if (backend === 'idb') {
-      return idbPut(KEY, data).catch(function () {
-        // IndexedDB went away mid-session (private mode, quota). Downgrade.
-        backend = 'localstorage';
-        return writeLocal(payload);
-      });
-    }
-    if (backend === 'localstorage') return writeLocal(payload);
-    return Promise.resolve();
+    if (!data) return Promise.resolve();  // locked: nothing in memory to write
+    return payload().then(function (body) {
+      if (backend === 'idb') {
+        return idbPut(KEY, body).then(function () {
+          // Never leave an older (possibly unencrypted) copy behind.
+          try { window.localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
+        }, function () {
+          // IndexedDB went away mid-session (private mode, quota). Downgrade.
+          backend = 'localstorage';
+          return writeLocal(body);
+        });
+      }
+      if (backend === 'localstorage') return writeLocal(body);
+      return undefined;
+    });
   }
 
-  function writeLocal(payload) {
-    return new Promise(function (resolve, reject) {
-      try {
-        window.localStorage.setItem(LS_KEY, payload);
-        resolve();
-      } catch (e) {
-        backend = 'memory';
-        reject(new Error(
-          'This browser ran out of local storage space. Your work is still on ' +
-          'screen but was not saved. Use Settings to back up now, then remove ' +
-          'or archive some photos.'
-        ));
-      }
-    });
+  function settle(err) {
+    var p = pending;
+    pending = null;
+    if (!p) return;
+    if (err) {
+      errorListeners.forEach(function (fn) { try { fn(err); } catch (e) { /* ignore */ } });
+      p.reject(err);
+    } else {
+      listeners.forEach(function (fn) { try { fn(); } catch (e) { /* ignore */ } });
+      p.resolve();
+    }
   }
 
   // Debounced so typing in a textarea does not write on every keystroke.
+  // Every call made inside one debounce window shares the same promise, and
+  // a failure is always reported through onError even if nobody is waiting.
+  function ensurePending() {
+    if (!pending) {
+      var p = {};
+      p.promise = new Promise(function (res, rej) { p.resolve = res; p.reject = rej; });
+      p.promise.catch(function () { /* reported through onError */ });
+      pending = p;
+    }
+    return pending.promise;
+  }
+
   function save() {
-    return new Promise(function (resolve, reject) {
-      if (saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(function () {
-        saveTimer = null;
-        persist().then(function () {
-          listeners.forEach(function (fn) { try { fn(); } catch (e) {} });
-          resolve();
-        }, reject);
-      }, 250);
+    var mine = ensurePending();
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      persist().then(function () { settle(); }, settle);
+    }, 250);
+    return mine;
+  }
+
+  // Write now, including anything waiting in the debounce window. Used on
+  // page hide, so closing the tab straight after typing loses nothing.
+  function saveNow() {
+    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+    ensurePending();
+    return persist().then(function () { settle(); }, function (err) { settle(err); throw err; });
+  }
+
+  function flush() {
+    return saveTimer ? saveNow() : Promise.resolve();
+  }
+
+  /* ----- passcode ------------------------------------------------------- */
+
+  function unlock(passcode) {
+    if (!envelope) return Promise.resolve();
+    return Crypt.open(envelope, passcode).then(function (res) {
+      bundle = res.bundle;
+      data = normalize(res.data);
+      envelope = null;
     });
   }
 
-  function saveNow() {
-    if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
-    return persist();
+  // Writes the encrypted copy, then forgets everything in memory.
+  function lock() {
+    if (!bundle || !data) return Promise.resolve();
+    return flush().then(function () { return Crypt.seal(bundle, data); }).then(function (env) {
+      envelope = env;
+      data = null;
+      bundle = null;
+    });
   }
 
-  return {
+  function setPasscode(passcode) {
+    return Crypt.newKey(passcode).then(function (b) {
+      bundle = b;
+      return saveNow();
+    });
+  }
+
+  function removePasscode() {
+    bundle = null;
+    return saveNow();
+  }
+
+  /* ----- public API --------------------------------------------------- */
+
+  var api = {
     init: init,
     save: save,
     saveNow: saveNow,
+    flush: flush,
     onSave: function (fn) { listeners.push(fn); },
+    onError: function (fn) { errorListeners.push(fn); },
     backend: function () { return backend; },
+
+    isLocked: function () { return !data; },
+    hasPasscode: function () { return !!bundle || !!envelope; },
+    unlock: unlock,
+    lock: lock,
+    setPasscode: setPasscode,
+    removePasscode: removePasscode,
+
+    // What goes into a backup file: encrypted when a passcode is set.
+    backupPayload: function () { return payload(); },
 
     all: function () { return data.people; },
     settings: function () { return data.settings; },
@@ -405,14 +562,12 @@ var Store = (function () {
 
     mergeIn: function (loaded) {
       var incoming = normalize(loaded);
-      var byId = {};
-      data.people.forEach(function (p) { byId[p.id] = true; });
       var added = 0, updated = 0;
       incoming.people.forEach(function (p) {
-        if (byId[p.id]) {
-          var existing = Store.get(p.id);
+        var existing = api.get(p.id);
+        if (existing) {
           // Last edit wins, so a stale backup cannot clobber newer field notes.
-          if (existing && new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+          if (new Date(p.updatedAt) > new Date(existing.updatedAt)) {
             data.people = data.people.map(function (x) { return x.id === p.id ? p : x; });
             updated++;
           }
@@ -426,7 +581,7 @@ var Store = (function () {
 
     // Bulk-add, used by the sample caseload. One write, not six.
     addMany: function (list) {
-      list.forEach(function (p) { data.people.unshift(p); });
+      list.forEach(function (p) { data.people.unshift(normalizePerson(p)); });
       return saveNow();
     },
 
@@ -442,18 +597,14 @@ var Store = (function () {
 
     uid: uid,
     blankPerson: blankPerson,
-    blankDatabase: blankDatabase
+    blankDatabase: blankDatabase,
+    normalize: normalize,
+    DEFAULT_DOCUMENTS: DEFAULT_DOCUMENTS
   };
+  return api;
 
   function defaultDocuments() {
-    return [
-      'State ID or Driver’s License',
-      'Social Security Card',
-      'Birth Certificate',
-      'Proof of Income / Benefit Letter',
-      'Medical Insurance Card',
-      'Housing Application'
-    ].map(function (name) {
+    return DEFAULT_DOCUMENTS.map(function (name) {
       return { id: uid(), name: name, status: 'unknown', notes: '', expires: '' };
     });
   }

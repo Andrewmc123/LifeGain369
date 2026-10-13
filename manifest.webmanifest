@@ -1,0 +1,13 @@
+{
+  "name": "Outreach Companion",
+  "short_name": "Outreach",
+  "description": "A private, offline record keeper for street outreach.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080a10",
+  "theme_color": "#0a7a68",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

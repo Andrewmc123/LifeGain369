@@ -3,7 +3,7 @@
 
    A new install shows almost nothing, which makes the app hard to judge and
    harder to learn. This builds six invented records that between them
-   trigger every rule in workflow.js: someone who may qualify as chronically
+   trigger every rule in flow.js: someone who may qualify as chronically
    homeless, someone recently housed, a first contact with no consent yet, an
    overdue follow-up, a young adult who should never be sent to adult intake,
    and a duplicate.
@@ -17,10 +17,8 @@
 var SAMPLE = (function () {
   'use strict';
 
-  // Days ago -> YYYY-MM-DD
-  function d(n) {
-    return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
-  }
+  // Days ago -> YYYY-MM-DD, in local time.
+  function d(n) { return Util.daysAgoStr(n); }
 
   function build(blankPerson, uid) {
     function log(days, type, worker, notes) {
@@ -34,10 +32,7 @@ var SAMPLE = (function () {
       return g;
     }
     function docs(map) {
-      return [
-        'State ID or Driver’s License', 'Social Security Card', 'Birth Certificate',
-        'Proof of Income / Benefit Letter', 'Medical Insurance Card', 'Housing Application'
-      ].map(function (name) {
+      return Store.DEFAULT_DOCUMENTS.map(function (name) {
         return { id: uid(), name: name, status: map[name] || 'unknown', notes: '', expires: '' };
       });
     }

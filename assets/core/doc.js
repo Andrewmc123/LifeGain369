@@ -35,17 +35,7 @@ var Doc = (function () {
 
   /* ----- small helpers ------------------------------------------------ */
 
-  function esc(s) {
-    return String(s === undefined || s === null ? '' : s)
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
-  function has(v) {
-    if (v === undefined || v === null) return false;
-    if (Array.isArray(v)) return v.length > 0;
-    return String(v).trim() !== '';
-  }
+  var esc = Util.esc, has = Util.has;
 
   function fullName(p) {
     var name = [p.firstName, p.lastName].filter(has).join(' ').trim();
@@ -122,8 +112,9 @@ var Doc = (function () {
 
     /* header */
     out.push('<div class="p-head">');
-    if (want('photo') && has(p.photo)) {
-      out.push('<img class="p-photo" src="' + p.photo + '" alt="Photo of ' + esc(shortName(p)) + '">');
+    var photo = Util.safeImage(p.photo);
+    if (want('photo') && photo) {
+      out.push('<img class="p-photo" src="' + photo + '" alt="Photo of ' + esc(shortName(p)) + '">');
     }
     out.push('<div class="p-id">');
     out.push('<h1>' + esc(fullName(p)) + '</h1>');
@@ -135,6 +126,8 @@ var Doc = (function () {
     out.push('<div class="p-meta">' + metaBits.join(' &nbsp;•&nbsp; ') + '</div>');
     out.push('</div>');
     out.push('<div class="p-org">');
+    var logo = Util.safeImage(settings.orgLogo);
+    if (logo) out.push('<img class="p-logo" src="' + logo + '" alt=""><br>');
     if (has(settings.orgName)) out.push('<strong>' + esc(settings.orgName) + '</strong><br>');
     if (has(settings.orgContact)) out.push(esc(settings.orgContact) + '<br>');
     out.push('Prepared ' + esc(fmtDate(new Date().toISOString())));

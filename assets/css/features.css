@@ -1,0 +1,70 @@
+/* ==========================================================================
+   features.css — the lock screen, funder report, plans page and the small
+   pieces added with them. Uses only the tokens defined in styles.css, so it
+   follows the light and dark themes automatically.
+   ========================================================================== */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.page-head .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.toolbar-check { margin: 0; white-space: nowrap; }
+
+/* ---------- header lock button ---------- */
+.lock-btn { margin-left: 6px; }
+body.is-locked .nav,
+body.is-locked .lock-btn { display: none; }
+
+/* ---------- save status ---------- */
+#save-dot.save-failed { color: var(--danger); font-weight: 600; }
+
+/* ---------- lock screen ---------- */
+.lock-wrap { display: flex; justify-content: center; padding: 6vh 0 4vh; }
+.lock-card { width: 100%; max-width: 420px; text-align: center; }
+.lock-card h1 { margin: 0 0 6px; }
+.lock-card input[type="password"] { text-align: center; font-size: 1.1rem; letter-spacing: .08em; }
+.lock-error { color: var(--danger); margin: 10px 0 0; }
+
+/* ---------- settings ---------- */
+.logo-preview {
+  max-height: 44px; max-width: 160px; object-fit: contain;
+  background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 4px;
+}
+
+/* ---------- funder report ---------- */
+.report-table { width: 100%; border-collapse: collapse; font-size: var(--fs-md); }
+.report-table th, .report-table td {
+  padding: 9px 4px; border-bottom: 1px solid var(--border); text-align: left;
+}
+.report-table th { font-weight: 500; color: var(--text-soft); }
+.report-table td {
+  text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-weight: 600; width: 6em;
+}
+.report-table tr:last-child th, .report-table tr:last-child td { border-bottom: 0; }
+
+/* ---------- plans ---------- */
+.plans {
+  display: grid; gap: 16px; margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.plans .plan { position: relative; margin: 0; display: flex; flex-direction: column; }
+.plan h2 { margin: 0 0 4px; }
+.plan-highlight { border-color: var(--accent); box-shadow: var(--shadow), var(--glow); }
+.plan-flag { position: absolute; top: 14px; right: 14px; }
+.plan-price {
+  font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; margin: 4px 0 6px;
+}
+.plan-list { margin: 0; padding-left: 1.1em; }
+.plan-list li { margin: 4px 0; }
+
+@media print {
+  .lock-btn { display: none !important; }
+  .report-table td { color: #000; }
+}
+
+/* .btn sets its own display, which would otherwise beat the hidden attribute. */
+.lock-btn[hidden] { display: none; }

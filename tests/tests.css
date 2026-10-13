@@ -1,0 +1,5 @@
+body { font-family: system-ui, sans-serif; margin: 24px; background: #fff; color: #111; }
+li { margin: 4px 0; }
+.pass { color: #1e6b3c; }
+.fail { color: #9d2a26; font-weight: 600; }
+.skip { color: #777; }
