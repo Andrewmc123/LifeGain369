@@ -239,6 +239,24 @@ test('encryption round-trips and rejects a wrong passcode', function () {
   });
 });
 
+test('HMIS sheet fills from the record and leaves gaps for intake', function () {
+  var p = person(function (x) {
+    x.firstName = 'Ana'; x.lastName = 'Ruiz'; x.hmis.veteranAsked = 'No';
+    x.hmis.homelessMonths = '14'; x.hmis.ssnOnFile = 'Yes';
+  });
+  var rows = Doc.hmisSheet(p);
+  var get = function (t) { return rows.filter(function (r) { return r.t === t; })[0].v; };
+  eq(get('First name'), 'Ana');
+  eq(get('Veteran status'), 'No');
+  eq(get('Gender'), '');
+  ok(get('Length of time homeless').indexOf('14 months') === 0);
+  ok(get('Social Security Number').indexOf('never stored') !== -1);
+  var text = Doc.packetText(p, { sections: Doc.PRESETS.hmis.on });
+  ok(text.indexOf('HMIS ENTRY SHEET') !== -1, 'text packet has the sheet');
+  ok(text.indexOf('Gender: ________ (ask at intake)') !== -1, 'gaps are marked');
+  ok(Doc.packetHTML(p, { sections: Doc.PRESETS.hmis.on }).indexOf('ask at intake') !== -1);
+});
+
 /* ----- runner --------------------------------------------------------------- */
 
 function runTests(report) {

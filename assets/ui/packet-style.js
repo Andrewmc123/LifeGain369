@@ -31,6 +31,7 @@ var PACKET_CSS = [
   '.packet table.p-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}',
   '.packet table.p-tbl th{text-align:left;background:#f1eee9;border:1px solid #ddd6cc;padding:6px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}',
   '.packet table.p-tbl td{border:1px solid #e5e0d8;padding:6px 8px;vertical-align:top;}',
+  '.packet .p-blank{color:#777;font-style:italic;}',
   '.packet .p-taglist{display:flex;flex-wrap:wrap;gap:6px;}',
   '.packet .p-tag{border:1px solid #c9c1b6;border-radius:999px;padding:2px 10px;font-size:12px;background:#f7f5f2;}',
   '.packet .p-foot{margin-top:26px;border-top:1px solid #d8d2c8;padding-top:10px;font-size:10.5px;color:#777;}',

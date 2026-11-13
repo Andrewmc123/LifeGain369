@@ -59,18 +59,23 @@
 
   function tabOverview(p) {
     var h = '';
+    var c = p.consent || {};
 
     var photo = Util.safeImage(p.photo);
+    // No consent, no camera: the buttons stay off until the box is ticked.
+    var noPhotoConsent = !c.photoConsent ? ' disabled title="Record their consent first"' : '';
     h += '<div class="card"><div class="card-head"><h2>Photo</h2></div>' +
-      '<p class="section-hint">Ask before taking a photo, and record their consent below. A photo helps a team recognise someone, and helps reunite people with services that have met them before.</p>' +
+      '<p class="section-hint">Ask before taking a photo, and tick their answer here. A photo helps a team recognise someone, and helps reunite people with services that have met them before.</p>' +
       '<div class="photo-block"><div class="photo-frame">' +
       (photo
         ? '<img src="' + photo + '" alt="Photo of ' + esc(Doc.shortName(p)) + '">'
         : '<div class="placeholder"><span class="big">📷</span>No photo yet</div>') +
       '</div><div style="flex:1;min-width:220px">' +
+      check('They agreed to a photo', 'consent.photoConsent', c.photoConsent) +
+      (!c.photoConsent ? '<p class="small faint">Ask first. The camera unlocks once you tick this.</p>' : '') +
       '<div class="btn-row mb16">' +
-      '<button class="btn" data-action="photo-pick">Choose a photo</button>' +
-      '<button class="btn" data-action="photo-camera">Use camera</button>' +
+      '<button class="btn" data-action="photo-pick"' + noPhotoConsent + '>Choose a photo</button>' +
+      '<button class="btn" data-action="photo-camera"' + noPhotoConsent + '>Use camera</button>' +
       (photo ? '<button class="btn danger" data-action="photo-clear">Remove</button>' : '') +
       '</div>' +
       '<input type="file" id="photo-input" accept="image/*" style="display:none">' +
@@ -95,11 +100,10 @@
       area('General notes', 'generalNotes', p.generalNotes, { placeholder: 'Anything a colleague meeting this person should know.' }) +
       '</div>';
 
-    var c = p.consent || {};
     h += '<div class="card"><div class="card-head"><h2>Consent</h2></div>' +
       '<p class="section-hint">Recording consent protects the person. Ask plainly what they are comfortable with, and note it here.</p>' +
       check('They agreed to have this information written down', 'consent.dataConsent', c.dataConsent) +
-      check('They agreed to a photo', 'consent.photoConsent', c.photoConsent) +
+      '<p class="small faint">Photo consent: ' + (c.photoConsent ? 'yes' : 'not given') + ' (set in the Photo card above).</p>' +
       check('They agreed for their story to be shared with services', 'consent.storyConsent', c.storyConsent) +
       '<div class="grid cols-2 mt16">' +
       '<div>' + text('Signed / agreed by', 'consent.signedName', c.signedName) + '</div>' +

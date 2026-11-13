@@ -15,6 +15,7 @@ var Doc = (function () {
     { key: 'identity', label: 'Name & contact' },
     { key: 'stay',     label: 'Where they stay' },
     { key: 'timeline', label: 'Housing history & key dates' },
+    { key: 'hmis',     label: 'HMIS entry sheet (HUD data elements)' },
     { key: 'goals',    label: 'Goals — what they’re working toward' },
     { key: 'story',    label: 'My Story (in their words)' },
     { key: 'needs',    label: 'Needs, barriers & health' },
@@ -30,7 +31,8 @@ var Doc = (function () {
     referral: { label: 'Referral packet', on: ['photo','identity','stay','timeline','goals','needs','docs','consent','signature'] },
     story:    { label: 'Story sheet', on: ['photo','identity','story','goals','consent'] },
     housing:  { label: 'Housing application support', on: ['identity','stay','timeline','goals','docs','needs','consent','signature'] },
-    contact:  { label: 'Contact card', on: ['photo','identity','stay'] }
+    contact:  { label: 'Contact card', on: ['photo','identity','stay'] },
+    hmis:     { label: 'HMIS entry sheet', on: ['identity','hmis','consent'] }
   };
 
   /* ----- small helpers ------------------------------------------------ */
@@ -92,6 +94,36 @@ var Doc = (function () {
   }
 
   function none(text) { return '<div class="p-none">' + esc(text) + '</div>'; }
+
+  /* The HMIS entry sheet: HUD's data elements in the order an HMIS intake screen
+     asks for them, filled from this record, so entering someone into the local HMIS
+     is copying, not re-interviewing. Blank means: ask at intake. The SSN is never
+     stored here, only whether it is held elsewhere. */
+  function yesNoAsked(flag, asked) { return flag ? 'Yes' : (has(asked) ? asked : ''); }
+
+  function hmisSheet(p) {
+    var hm = p.hmis || {}, s = p.stay || {};
+    var length = [has(hm.homelessMonths) ? hm.homelessMonths + ' months (approx.)' : '',
+      has(s.homelessSince) ? 'since ' + fmtDate(s.homelessSince) : ''].filter(has).join(', ');
+    return [
+      { id: '3.01', t: 'First name', v: p.firstName },
+      { id: '3.01', t: 'Last name', v: p.lastName },
+      { id: '3.02', t: 'Social Security Number', v: has(hm.ssnOnFile) ? 'Held elsewhere: ' + hm.ssnOnFile + ' (never stored in this app)' : '' },
+      { id: '3.03', t: 'Date of birth', v: fmtDate(p.dob) },
+      { id: '3.04', t: 'Race and ethnicity', v: Array.isArray(hm.raceEthnicity) ? hm.raceEthnicity.join(', ') : hm.raceEthnicity },
+      { id: '3.06', t: 'Gender', v: hm.gender },
+      { id: '3.07', t: 'Veteran status', v: yesNoAsked(p.veteran, hm.veteranAsked) },
+      { id: '3.08', t: 'Disabling condition', v: yesNoAsked(p.disability, hm.disabilityAsked) },
+      { id: '3.917', t: 'Prior living situation', v: s.situation },
+      { id: '3.917', t: 'Length of time homeless', v: length },
+      { id: '3.917', t: 'Times homeless in the past 3 years', v: hm.homelessTimes },
+      { id: '3.15', t: 'Household type', v: hm.householdType },
+      { id: '3.16', t: 'Continuum of Care', v: hm.coc },
+      { id: '4.13', t: 'Date of engagement', v: fmtDate(p.engagementDate) },
+      { id: '3.20', t: 'Housing move-in date', v: fmtDate(p.housedDate) },
+      { id: '—', t: 'Local HMIS client ID', v: hm.clientCode }
+    ].map(function (r) { return { id: r.id, t: r.t, v: has(r.v) ? String(r.v) : '' }; });
+  }
 
   function locationLine(p) {
     var s = p.stay || {};
@@ -208,6 +240,16 @@ var Doc = (function () {
           ' with a disabling condition. To be confirmed by an assessor; this is a prompt to check, ' +
           'not a determination.</div>');
       }
+    }
+
+    if (want('hmis')) {
+      out.push('<h2 class="p-sec">HMIS entry sheet</h2>');
+      out.push('<div class="p-none">HUD data elements in the order intake asks for them. Anything marked ask at intake is not recorded yet.</div>');
+      out.push('<table class="p-tbl"><thead><tr><th>Element</th><th>Field</th><th>From this record</th></tr></thead><tbody>' +
+        hmisSheet(p).map(function (r) {
+          return '<tr><td>' + esc(r.id) + '</td><td>' + esc(r.t) + '</td><td>' +
+            (r.v ? esc(r.v) : '<span class="p-blank">ask at intake</span>') + '</td></tr>';
+        }).join('') + '</tbody></table>');
     }
 
     /* goals */
@@ -406,6 +448,13 @@ var Doc = (function () {
       }
     }
 
+    if (want('hmis')) {
+      head('HMIS entry sheet (HUD data elements)');
+      hmisSheet(p).forEach(function (r) {
+        L.push('  ' + (r.id + '      ').slice(0, 6) + r.t + ': ' + (r.v || '________ (ask at intake)'));
+      });
+    }
+
     if (want('goals')) {
       head('What they are working toward');
       if (!has(p.goals)) L.push('  (none recorded)');
@@ -589,6 +638,7 @@ var Doc = (function () {
     fullName: fullName,
     shortName: shortName,
     fmtDate: fmtDate,
+    hmisSheet: hmisSheet,
     fmtDateTime: fmtDateTime,
     age: age,
     daysSince: daysSince,

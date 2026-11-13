@@ -9,7 +9,7 @@
 
 var APP_CONFIG = {
   productName: 'LifeGain369',
-  version: '2.0.0',
+  version: '2.1.0',
 
   // Where an organisation reaches you about the paid plans. A mailto link is
   // built from this address.
