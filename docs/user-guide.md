@@ -3,7 +3,8 @@
 ## Using it in the field
 
 1. **Ask first.** Explain what you are writing down and why. Record what they agreed to on the
-   Overview tab — including whether a photo and their story may be shared.
+   Overview tab — including whether their story may be shared. The photo buttons stay off until
+   you tick "They agreed to a photo" in the Photo card.
 2. **Start small.** A name they go by and where they stay is enough for a first contact.
    Nothing in this app is required; a blank field is a record of their choice.
 3. **Use their words.** Goals and My Story should read the way they said it, not the way a
@@ -157,12 +158,17 @@ Open a person → **Documentation** tab.
 Choose which sections belong in this particular document. A shelter referral does not need
 someone's whole life story; a housing application does not need the contact log. There are
 ready-made starting points (Full record, Referral packet, Story sheet, Housing application
-support, Contact card), and you can tick sections on or off from there.
+support, Contact card, HMIS entry sheet), and you can tick sections on or off from there.
 
 The **Housing history & key dates** section collects the things a receiving agency asks for
 first — how long they have been homeless, engagement and assessment dates, Continuum of Care,
 and the chronic-homelessness flag where it applies. It is in the Referral and Housing presets and
 out of the Story sheet.
+
+The **HMIS entry sheet** lists HUD's data elements in the order an HMIS intake screen asks for
+them, filled in from the record. Anything not recorded yet is marked *ask at intake*, so entering
+someone into your local HMIS is copying, not a second interview. The Social Security Number is
+never stored here; the sheet only says whether it is held elsewhere.
 
 **Your next steps never leave the team.** The suggestions on the Plan tab are internal prompts
 for the worker and are deliberately excluded from every printed and emailed document.

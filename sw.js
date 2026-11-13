@@ -7,13 +7,17 @@
    Records are never touched here — they live in the browser's database.
    ========================================================================== */
 
-var CACHE = 'outreach-companion-v2';
+// Change the version on every release so installed copies pick up the new files.
+var CACHE = 'lifegain369-v2.1.0';
 
 var SHELL = [
   './',
   'index.html',
   'manifest.webmanifest',
   'assets/icon.svg',
+  'assets/icons/icon-180.png',
+  'assets/icons/icon-192.png',
+  'assets/icons/icon-512.png',
   'assets/css/styles.css',
   'assets/css/refine.css',
   'assets/css/features.css',

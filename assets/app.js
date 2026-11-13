@@ -60,7 +60,7 @@ var App = (function () {
     });
     var org = document.getElementById('brand-org');
     if (org) {
-      org.textContent = (!locked && Store.settings().orgName) || 'Local records · nothing is uploaded';
+      org.textContent = (!locked && Store.settings().orgName) || APP_CONFIG.tagline;
     }
     var lockBtn = document.getElementById('lock-now');
     if (lockBtn) lockBtn.hidden = locked || !Store.hasPasscode();

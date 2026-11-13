@@ -29,6 +29,7 @@ them show every part of the app working.
 | **Today** | Who is due, who has gone quiet, what needs attention, and a backup reminder. |
 | **Plan & next steps** | A stage worked out from the record, prompts sorted by urgency, milestones, a priority-housing (chronic homelessness) check, duplicate detection, and what intake will ask. |
 | **Documentation** | Pick sections, then print, save as PDF, email, or download as a file. |
+| **HMIS entry sheet** | HUD data elements in intake order, filled from the record, so HMIS entry is copying, not re-interviewing. |
 | **Funder report** | Totals for any period, with no names, as a printout or spreadsheet. |
 | **Passcode lock** | Encrypts records and backups; locks itself when left alone. |
 | **NYC resources** | 41 hotlines, intake sites and departments, plus what paperwork each step needs. Another city is another data file. |

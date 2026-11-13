@@ -133,8 +133,8 @@ var Actions = (function () {
     },
 
     /* photo */
-    'photo-pick': function () { el('photo-input').click(); },
-    'photo-camera': function () { el('photo-camera-input').click(); },
+    'photo-pick': function () { if (photoConsentGiven()) el('photo-input').click(); },
+    'photo-camera': function () { if (photoConsentGiven()) el('photo-camera-input').click(); },
     'photo-clear': function () {
       var p = person();
       if (!confirm('Remove this photo?')) return;
@@ -454,7 +454,15 @@ var Actions = (function () {
   }
 
   // Answers whose change alters something else on screen.
-  var REDRAW_BINDS = /^(stay\.withChildren|stay\.withPets|veteran|disability|hmis\.veteranAsked|hmis\.disabilityAsked)$/;
+  // A photo is never saved without recorded consent (the buttons are disabled too).
+  function photoConsentGiven() {
+    var p = person();
+    if (p && p.consent && p.consent.photoConsent) return true;
+    toast('Tick "They agreed to a photo" first.');
+    return false;
+  }
+
+  var REDRAW_BINDS = /^(consent\.photoConsent|stay\.withChildren|stay\.withPets|veteran|disability|hmis\.veteranAsked|hmis\.disabilityAsked)$/;
 
   function onInput(e) {
     var t = e.target;
@@ -512,6 +520,7 @@ var Actions = (function () {
     if (t.id === 'photo-input' || t.id === 'photo-camera-input') {
       var file = t.files && t.files[0];
       if (!file) return;
+      if (!photoConsentGiven()) { t.value = ''; return; }
       toast('Processing photo…');
       UI.readPhoto(file, function (dataUrl) {
         var p = person();
